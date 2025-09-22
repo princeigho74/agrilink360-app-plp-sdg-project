@@ -1,76 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriLink360 — Pan-African Food Distribution</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AgriLink360 — Pan-African Food Distribution</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
 </head>
 <body class="bg-gray-50">
 <div id="root"></div>
 
-<!-- React -->
-<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<!-- Payments -->
-<script src="https://checkout.flutterwave.com/v3.js"></script>
-
 <script type="text/babel">
-
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
 // Utility
-function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
-function currencyFmt(n){ return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n); }
+const uid=(prefix='id')=>prefix+'_'+Math.random().toString(36).slice(2,9);
+const currencyFmt=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
 
-// Storage helper
-const storage = {
-  load(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback }catch{return fallback} },
-  save(key,val){ localStorage.setItem(key,JSON.stringify(val)); }
-};
-
-// Pan-African products
-const DEFAULT_PRODUCTS = [
-  {id:uid(), title:'Rice (50kg)', qty:'50kg', location:'Lagos, Nigeria', price:120, desc:'High-quality rice', sensor:{temp:28,humidity:70}},
-  {id:uid(), title:'Beans (30kg)', qty:'30kg', location:'Kano, Nigeria', price:80, desc:'Protein-rich beans', sensor:{temp:27,humidity:65}},
-  {id:uid(), title:'Tomatoes (100kg)', qty:'100kg', location:'Abuja, Nigeria', price:90, desc:'Fresh tomatoes', sensor:{temp:26,humidity:75}},
-  {id:uid(), title:'Fish (20kg)', qty:'20kg', location:'Accra, Ghana', price:150, desc:'Fresh fish', sensor:{temp:24,humidity:80}},
-  {id:uid(), title:'Bush Meat (15kg)', qty:'15kg', location:'Lomé, Togo', price:200, desc:'Premium bush meat', sensor:{temp:25,humidity:70}},
-  {id:uid(), title:'Cassava (100kg)', qty:'100kg', location:'Abidjan, Ivory Coast', price:75, desc:'Fresh cassava', sensor:{temp:28,humidity:65}},
-  {id:uid(), title:'Garri (50kg)', qty:'50kg', location:'Douala, Cameroon', price:60, desc:'Quality Garri', sensor:{temp:27,humidity:70}},
-  {id:uid(), title:'Onions (80kg)', qty:'80kg', location:'Nairobi, Kenya', price:110, desc:'Fresh onions', sensor:{temp:25,humidity:60}},
-  {id:uid(), title:'Pepper (40kg)', qty:'40kg', location:'Dakar, Senegal', price:95, desc:'Hot peppers', sensor:{temp:29,humidity:72}},
-  {id:uid(), title:'Maize (100kg)', qty:'100kg', location:'Harare, Zimbabwe', price:100, desc:'Yellow maize', sensor:{temp:28,humidity:68}},
-  {id:uid(), title:'Sweet Potatoes (60kg)', qty:'60kg', location:'Kigali, Rwanda', price:85, desc:'Organic sweet potatoes', sensor:{temp:26,humidity:66}},
-  {id:uid(), title:'Yams (70kg)', qty:'70kg', location:'Accra, Ghana', price:90, desc:'Fresh yams', sensor:{temp:27,humidity:68}},
-  {id:uid(), title:'Cabbage (40kg)', qty:'40kg', location:'Addis Ababa, Ethiopia', price:70, desc:'Fresh cabbages', sensor:{temp:25,humidity:60}},
-  {id:uid(), title:'Chicken (25kg)', qty:'25kg', location:'Dar es Salaam, Tanzania', price:180, desc:'Fresh chicken', sensor:{temp:24,humidity:75}},
-  {id:uid(), title:'Milk (50L)', qty:'50L', location:'Kampala, Uganda', price:120, desc:'Fresh milk', sensor:{temp:4,humidity:50}}
+// Demo pan-African products
+const DEFAULT_PRODUCTS=[
+  {id:uid(),title:'Rice',qty:'50kg',location:'Lagos, Nigeria',price:120,desc:'High-quality rice',sensor:{temp:25,humidity:70}},
+  {id:uid(),title:'Beans',qty:'30kg',location:'Kano, Nigeria',price:80,desc:'Protein-rich beans',sensor:{temp:24,humidity:68}},
+  {id:uid(),title:'Tomatoes',qty:'100kg',location:'Accra, Ghana',price:90,desc:'Fresh tomatoes',sensor:{temp:26,humidity:75}},
+  {id:uid(),title:'Fish',qty:'20kg',location:'Dakar, Senegal',price:150,desc:'Fresh fish',sensor:{temp:22,humidity:80}},
+  {id:uid(),title:'Cassava',qty:'100kg',location:'Abidjan, Ivory Coast',price:75,desc:'Fresh cassava',sensor:{temp:25,humidity:72}},
+  {id:uid(),title:'Garri',qty:'50kg',location:'Douala, Cameroon',price:60,desc:'Quality Garri',sensor:{temp:24,humidity:70}},
+  {id:uid(),title:'Onions',qty:'80kg',location:'Nairobi, Kenya',price:110,desc:'Fresh onions',sensor:{temp:23,humidity:68}},
+  {id:uid(),title:'Pepper',qty:'40kg',location:'Dakar, Senegal',price:95,desc:'Hot peppers',sensor:{temp:26,humidity:75}},
+  {id:uid(),title:'Maize',qty:'100kg',location:'Harare, Zimbabwe',price:100,desc:'Yellow maize',sensor:{temp:25,humidity:72}},
+  {id:uid(),title:'Chicken',qty:'25kg',location:'Dar es Salaam, Tanzania',price:180,desc:'Fresh chicken',sensor:{temp:22,humidity:70}},
+  {id:uid(),title:'Milk',qty:'50L',location:'Kampala, Uganda',price:120,desc:'Fresh milk',sensor:{temp:20,humidity:68}},
 ];
 
 // Demo users
-const DEFAULT_USERS = [
-  {id:'farm1', type:'farmer', name:'Uche Farms', email:'uche@demo.com', password:'farm123'},
-  {id:'buyer_demo', type:'buyer', name:'Market Buyer', email:'buyer@demo.com', password:'buy123'}
+const DEFAULT_USERS=[
+  {id:'farmer1',type:'farmer',name:'Uche Farms',email:'uche@demo.com',password:'farm123'},
+  {id:'buyer1',type:'buyer',name:'Market Buyer',email:'buyer@demo.com',password:'buy123'}
 ];
 
-// Toasts
-function Toast({items, remove}){
+// Toast notifications
+function Toast({items,remove}){
   return (
     <div className="fixed right-4 bottom-4 w-96 space-y-2 z-50">
       {items.map(t=>(
-        <div key={t.id} className="bg-white shadow p-3 rounded border-l-4 border-green-600">
-          <div className="flex justify-between">
+        <div key={t.id} className="bg-white shadow p-3 rounded border-l-4" role="status" aria-live="polite">
+          <div className="flex items-start justify-between">
             <div>
               <div className="font-semibold">{t.title}</div>
               <div className="text-xs text-gray-600">{t.msg}</div>
             </div>
-            <button className="text-sm text-gray-500" onClick={()=>remove(t.id)}>✕</button>
+            <div className="ml-3">
+              <button aria-label="close" onClick={()=>remove(t.id)} className="text-sm text-gray-500 px-2 py-1">✕</button>
+            </div>
           </div>
         </div>
       ))}
@@ -82,12 +66,12 @@ function Toast({items, remove}){
 function Header({current,setCurrent,user,signout}){
   return (
     <header className="bg-white shadow sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-md bg-green-600 text-white flex items-center justify-center font-bold">A</div>
           <div>
             <div className="text-lg font-semibold">AgriLink360</div>
-            <div className="text-xs text-gray-500">Pan-African Food Distribution</div>
+            <div className="text-xs text-gray-500">Food Distribution Across Africa</div>
           </div>
         </div>
         <nav className="flex items-center space-x-3">
@@ -99,7 +83,7 @@ function Header({current,setCurrent,user,signout}){
               <div className="text-sm text-gray-700">{user.name}</div>
               <button onClick={signout} className="px-3 py-1 border rounded text-sm">Sign out</button>
             </div>
-          ) : (
+          ):(
             <button onClick={()=>setCurrent('auth')} className="px-3 py-1 border rounded text-sm">Sign in / Register</button>
           )}
         </nav>
@@ -111,19 +95,26 @@ function Header({current,setCurrent,user,signout}){
 // Auth
 function Auth({onLogin}){
   const [mode,setMode]=useState('login');
-  const [name,setName]=useState(''); const [email,setEmail]=useState(''); const [pw,setPw]=useState(''); const [type,setType]=useState('farmer');
+  const [name,setName]=useState('');
+  const [email,setEmail]=useState('');
+  const [pw,setPw]=useState('');
+  const [type,setType]=useState('farmer');
 
-  function register(e){ e.preventDefault();
-    if(!name||!email||!pw){alert('Fill all fields'); return;}
-    const id=uid(type); const users=storage.load('users',DEFAULT_USERS);
-    users.push({id,type,name,email,password:pw}); storage.save('users',users);
-    onLogin({id,name,email,type});
+  function register(e){
+    e.preventDefault();
+    if(!name||!email||!pw){alert('Fill all fields');return;}
+    const u={id:uid(type),name,email,password:pw,type};
+    const users=JSON.parse(localStorage.getItem('users')||'[]');
+    users.push(u);
+    localStorage.setItem('users',JSON.stringify(users));
+    onLogin(u);
   }
 
-  function login(e){ e.preventDefault();
-    const users=storage.load('users',DEFAULT_USERS);
+  function login(e){
+    e.preventDefault();
+    const users=JSON.parse(localStorage.getItem('users')||'[]');
     const u=users.find(x=>x.email===email && x.password===pw);
-    if(!u){alert('Invalid credentials'); return;}
+    if(!u){alert('Invalid credentials');return;}
     onLogin(u);
   }
 
@@ -131,67 +122,69 @@ function Auth({onLogin}){
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
       <h3 className="text-lg font-semibold mb-4">{mode==='login'?'Sign In':'Register'}</h3>
       <form onSubmit={mode==='login'?login:register} className="space-y-3">
-        {mode==='register' && <>
-          <label className="block text-xs text-gray-600">Name
+        {mode==='register' && (
+          <>
+          <label className="block"><div className="text-xs text-gray-600">Name</div>
             <input value={name} onChange={e=>setName(e.target.value)} className="w-full p-2 border rounded"/>
           </label>
-          <label className="block text-xs text-gray-600">Account Type
+          <label className="block"><div className="text-xs text-gray-600">Account type</div>
             <select value={type} onChange={e=>setType(e.target.value)} className="w-full p-2 border rounded">
               <option value="farmer">Farmer</option>
               <option value="buyer">Buyer</option>
             </select>
           </label>
-        </>}
-        <label className="block text-xs text-gray-600">Email
-          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" className="w-full p-2 border rounded"/>
+          </>
+        )}
+        <label className="block"><div className="text-xs text-gray-600">Email</div>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-2 border rounded"/>
         </label>
-        <label className="block text-xs text-gray-600">Password
-          <input value={pw} onChange={e=>setPw(e.target.value)} type="password" className="w-full p-2 border rounded"/>
+        <label className="block"><div className="text-xs text-gray-600">Password</div>
+          <input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="w-full p-2 border rounded"/>
         </label>
         <div className="flex justify-between items-center">
           <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded">{mode==='login'?'Sign In':'Create Account'}</button>
-          <button type="button" className="text-sm text-gray-600 underline" onClick={()=>setMode(mode==='login'?'register':'login')}>{mode==='login'?'Need an account?':'Have an account?'}</button>
+          <button type="button" className="text-sm text-gray-600 underline" onClick={()=>setMode(mode==='login'?'register':'login')}>
+            {mode==='login'?'Need account?':'Have account?'}
+          </button>
         </div>
       </form>
-      <div className="text-xs text-gray-500 mt-3">Demo: farmer(uche@demo.com / farm123), buyer(buyer@demo.com / buy123)</div>
+      <div className="text-xs text-gray-500 mt-3">Demo: farmer(uche@demo.com/farm123), buyer(buyer@demo.com/buy123)</div>
     </div>
   );
 }
 
 // Marketplace
-function Marketplace({products,onBuy,onView,query,setQuery,filters,setFilters}){
-  const filtered = products.filter(p=>{
-    const q=query.trim().toLowerCase();
-    const match = q==='' || p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.location.toLowerCase().includes(q);
-    const byLoc = !filters.location || p.location.toLowerCase()===filters.location.toLowerCase();
-    return match && byLoc;
+function Marketplace({products,onBuy}){
+  const [query,setQuery]=useState('');
+  const [filter,setFilter]=useState('');
+
+  const filtered=products.filter(p=>{
+    const matchQuery=p.title.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
+    const matchLoc=!filter||p.location.includes(filter);
+    return matchQuery && matchLoc;
   });
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex justify-between mb-4 items-center">
-        <h2 className="text-2xl font-semibold">Marketplace</h2>
-        <div className="flex gap-2">
-          <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search products/location" className="px-3 py-2 border rounded w-80"/>
-          <select value={filters.location||''} onChange={e=>setFilters(f=>({...f,location:e.target.value}))} className="px-3 py-2 border rounded">
-            <option value="">All locations</option>
-            {[...new Set(products.map(p=>p.location))].map(loc=><option key={loc} value={loc}>{loc}</option>)}
-          </select>
-        </div>
+      <h1 className="text-3xl font-bold mb-4 text-green-700">Marketplace</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between mb-4 gap-2">
+        <input placeholder="Search products" value={query} onChange={e=>setQuery(e.target.value)} className="w-full sm:w-1/2 px-3 py-2 border rounded"/>
+        <select value={filter} onChange={e=>setFilter(e.target.value)} className="w-full sm:w-1/4 px-3 py-2 border rounded">
+          <option value="">All countries/cities</option>
+          {[...new Set(products.map(p=>p.location))].map(loc=><option key={loc}>{loc}</option>)}
+        </select>
       </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map(p=>(
-          <div key={p.id} className="bg-white rounded shadow overflow-hidden">
-            <div className="p-4">
-              <h3 className="font-semibold">{p.title}</h3>
-              <div className="text-xs text-gray-500">{p.qty} • {p.location}</div>
-              <p className="text-sm text-gray-700 mt-2">{p.desc}</p>
-              <div className="mt-3 flex justify-between items-center">
-                <div className="text-lg font-bold">{currencyFmt(p.price)}</div>
-                <div className="flex gap-2">
-                  <button onClick={()=>onView(p)} className="px-3 py-1 border rounded text-sm">Details</button>
-                  <button onClick={()=>onBuy(p)} className="px-3 py-1 bg-green-600 text-white rounded text-sm">Buy</button>
-                </div>
-              </div>
+          <div key={p.id} className="bg-white rounded shadow p-4 flex flex-col justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">{p.title}</h2>
+              <p className="text-sm text-gray-600">{p.desc}</p>
+              <p className="text-xs text-gray-500 mt-1">{p.qty} • {p.location}</p>
+            </div>
+            <div className="mt-2 flex justify-between items-center">
+              <span className="font-bold text-green-700">{currencyFmt(p.price)}</span>
+              <button onClick={()=>onBuy(p)} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition">Buy</button>
             </div>
           </div>
         ))}
@@ -201,135 +194,113 @@ function Marketplace({products,onBuy,onView,query,setQuery,filters,setFilters}){
   );
 }
 
-// IoT Monitor
-function IoTMonitor({products,updateSensorState,sendToast}){
-  const [running,setRunning]=useState(false);
-  const [data,setData]=useState(products.map(p=>({...p.sensor,id:p.id})));
-
-  useEffect(()=>{ setData(products.map(p=>({...p.sensor,id:p.id}))) },[products]);
+// IoT Monitor Mock
+function IoTMonitor({products,toast}){
+  const [data,setData]=useState(products.map(p=>({...p,sensor:{...p.sensor}})));
 
   useEffect(()=>{
-    if(!running) return;
     const interval=setInterval(()=>{
-      setData(prev=>prev.map(d=>{
-        const temp=d.temp+(Math.random()*2-1);
-        const humidity=d.humidity+(Math.random()*3-1);
-        if(temp>30) sendToast({title:'Alert',msg:`${products.find(p=>p.id===d.id).title} high temperature!`});
-        if(humidity>80) sendToast({title:'Alert',msg:`${products.find(p=>p.id===d.id).title} high humidity!`});
-        updateSensorState(d.id,temp,humidity);
-        return {...d,temp:Math.round(temp),humidity:Math.round(humidity)};
+      setData(prev=>prev.map(p=>{
+        const temp=p.sensor.temp + (Math.random()*4-2);
+        const humidity=p.sensor.humidity + (Math.random()*6-3);
+        if(temp>28 || humidity>75){
+          toast({title:'Spoilage Alert',msg:`${p.title} in ${p.location} may spoil soon!`});
+        }
+        return {...p,sensor:{temp:Math.round(temp),humidity:Math.round(humidity)}};
       }));
-    },3000);
+    },4000);
     return ()=>clearInterval(interval);
-  },[running]);
+  },[]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">IoT Monitor</h2>
-        <button onClick={()=>setRunning(!running)} className="px-3 py-1 bg-green-600 text-white rounded text-sm">{running?'Stop':'Start'} Monitoring</button>
-      </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map(d=>{
-          const p=products.find(x=>x.id===d.id);
-          return (
-            <div key={d.id} className="bg-white p-4 rounded shadow">
-              <h3 className="font-semibold">{p.title}</h3>
-              <div className="text-sm text-gray-600">{p.location}</div>
-              <div className="mt-2">
-                <div>Temperature: {d.temp}°C</div>
-                <div>Humidity: {d.humidity}%</div>
-              </div>
-            </div>
-          );
-        })}
+      <h1 className="text-3xl font-bold mb-4 text-green-700">IoT Monitor (Mock)</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {data.map(p=>(
+          <div key={p.id} className="bg-white rounded shadow p-4">
+            <h2 className="text-lg font-semibold">{p.title}</h2>
+            <p className="text-sm text-gray-600">{p.qty} • {p.location}</p>
+            <div className="mt-2 text-xs text-gray-700">Temp: {p.sensor.temp}°C, Humidity: {p.sensor.humidity}%</div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// AI-driven food redistribution suggestions
-function Redistribution({products}){
-  const [suggestions,setSuggestions]=useState([]);
-  useEffect(()=>{
-    // Simple mock AI: suggest redistribution if temp>28 or humidity>75
-    const highRisk = products.filter(p=>p.sensor.temp>28 || p.sensor.humidity>75);
-    setSuggestions(highRisk.map(p=>`${p.title} from ${p.location} should be redistributed urgently!`));
-  },[products]);
-
-  if(suggestions.length===0) return <div className="max-w-7xl mx-auto px-4 py-6"><h3 className="text-lg font-semibold">No urgent redistribution needed.</h3></div>;
-
+// Dashboard
+function Dashboard({user,products}){
+  if(!user) return <div className="max-w-7xl mx-auto px-4 py-6">Please sign in to access dashboard.</div>;
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h3 className="text-lg font-semibold mb-2">AI Redistribution Suggestions</h3>
-      <ul className="list-disc list-inside bg-white p-4 rounded shadow space-y-2">
-        {suggestions.map((s,i)=><li key={i}>{s}</li>)}
-      </ul>
+      <h1 className="text-3xl font-bold mb-4 text-green-700">Dashboard</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {user.type==='farmer' ? (
+          products.filter(p=>p.location.includes('Nigeria')).map(p=>(
+            <div key={p.id} className="bg-white rounded shadow p-4">
+              <h2 className="text-lg font-semibold">{p.title}</h2>
+              <p className="text-sm text-gray-600">{p.qty} • {p.location}</p>
+              <div className="mt-2 text-xs text-gray-700">AI Redistribution: Suggest nearest buyers in Africa</div>
+            </div>
+          ))
+        ):(
+          <div className="col-span-full text-gray-600">Buyers dashboard will show purchased products here</div>
+        )}
+      </div>
     </div>
   );
 }
 
 // App
 function App(){
-  const [user,setUser]=useState(storage.load('currentUser',null));
   const [current,setCurrent]=useState('market');
-  const [products,setProducts]=useState(storage.load('products',DEFAULT_PRODUCTS));
+  const [products,setProducts]=useState(JSON.parse(localStorage.getItem('products')||JSON.stringify(DEFAULT_PRODUCTS)));
+  const [user,setUser]=useState(JSON.parse(localStorage.getItem('user')||'null'));
   const [toasts,setToasts]=useState([]);
-  const [query,setQuery]=useState('');
-  const [filters,setFilters]=useState({});
 
-  const addToast=t=>setToasts(ts=>[...ts,{id:uid('t'),...t}]);
-  const removeToast=id=>setToasts(ts=>ts.filter(t=>t.id!==id));
-
-  const updateSensorState=(id,temp,humidity)=>{
-    setProducts(ps=>ps.map(p=>p.id===id?{...p,sensor:{temp,humidity}}:p));
+  const addToast=t=>{
+    const id=uid('toast');
+    setToasts(prev=>[...prev,{...t,id}]);
+    setTimeout(()=>setToasts(prev=>prev.filter(x=>x.id!==id)),5000);
   };
 
-  const handleLogin=u=>{setUser(u); storage.save('currentUser',u); addToast({title:'Welcome',msg:`Hello ${u.name}`});};
-  const handleSignout=()=>{setUser(null); storage.save('currentUser',null); addToast({title:'Signed Out',msg:'You are logged out'});};
-
-  const handleBuy=p=>{
-    if(!user || user.type!=='buyer'){alert('Sign in as buyer to buy'); return;}
+  const buyProduct=p=>{
     FlutterwaveCheckout({
-      public_key:"FLWPUBK_TEST-xxxxxxxxxxxxxx",
-      tx_ref: uid('tx'),
+      public_key: "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxxx-X", // Replace with your Flutterwave key
+      tx_ref: `AL360-${Date.now()}`,
       amount: p.price,
-      currency:"USD",
-      payment_options:"card, mobilemoneyghana, ussd",
-      customer:{email:user.email,name:user.name},
-      callback:function(data){ alert('Payment successful!'); },
-      onclose:function(){},
-      customizations:{title:"AgriLink360 Payment",description:`Purchase ${p.title}`}
+      currency: "USD",
+      payment_options: "card, mobilemoney, ussd",
+      customer: {
+        email: user.email,
+        name: user.name,
+      },
+      callback: function (data) {
+        addToast({title:'Purchase Success',msg:`You bought ${p.title} for ${currencyFmt(p.price)}`});
+      },
+      onclose: function() { addToast({title:'Purchase',msg:'Payment cancelled'}); },
     });
   };
 
-  const handleView=p=>alert(`${p.title}\n${p.desc}\nQuantity: ${p.qty}\nLocation: ${p.location}\nPrice: ${currencyFmt(p.price)}`);
+  const signout=()=>{
+    setUser(null);
+    localStorage.removeItem('user');
+  };
 
-  useEffect(()=>{storage.save('products',products)},[products]);
+  const handleLogin=u=>{
+    setUser(u);
+    localStorage.setItem('user',JSON.stringify(u));
+    setCurrent('market');
+  };
 
   return (
     <>
-      <Header current={current} setCurrent={setCurrent} user={user} signout={handleSignout} />
-      {!user && current==='auth' && <Auth onLogin={handleLogin}/>}
-      {user && current==='market' && <Marketplace products={products} onBuy={handleBuy} onView={handleView} query={query} setQuery={setQuery} filters={filters} setFilters={setFilters}/>}
-      {user && current==='iot' && <IoTMonitor products={products} updateSensorState={updateSensorState} sendToast={addToast}/>}
-      {user && current==='dashboard' && <>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map(p=>(
-              <div key={p.id} className="bg-white p-4 rounded shadow">
-                <h3 className="font-semibold">{p.title}</h3>
-                <div className="text-sm text-gray-600">{p.location}</div>
-                <div className="mt-2">Price: {currencyFmt(p.price)}</div>
-                <div className="mt-1">Qty: {p.qty}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <Redistribution products={products}/>
-      </>}
-      <Toast items={toasts} remove={removeToast}/>
+      <Header current={current} setCurrent={setCurrent} user={user} signout={signout}/>
+      {current==='auth' && <Auth onLogin={handleLogin}/>}
+      {current==='market' && <Marketplace products={products} onBuy={buyProduct}/>}
+      {current==='iot' && <IoTMonitor products={products} toast={addToast}/>}
+      {current==='dashboard' && <Dashboard user={user} products={products}/>}
+      <Toast items={toasts} remove={id=>setToasts(prev=>prev.filter(t=>t.id!==id))}/>
     </>
   );
 }
@@ -338,3 +309,4 @@ ReactDOM.render(<App/>,document.getElementById('root'));
 </script>
 </body>
 </html>
+
