@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLink360 Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-green-600 text-white p-4 flex justify-between items-center">
+    <h1 class="font-bold text-xl">AgriLink360 Dashboard</h1>
+    <div class="flex items-center gap-4">
+      <span id="userProfile">Admin</span>
+      <button class="bg-green-700 px-3 py-1 rounded">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    <!-- Metric Card: Total Orders -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h2 class="text-gray-700 font-bold">Total Orders</h2>
+      <p id="totalOrders" class="text-2xl font-bold">0</p>
+    </div>
+
+    <!-- Metric Card: IoT Device Status -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h2 class="text-gray-700 font-bold">IoT Device Status</h2>
+      <p id="iotStatus" class="text-2xl font-bold">Loading...</p>
+    </div>
+
+    <!-- Metric Card: Stock Level -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h2 class="text-gray-700 font-bold">Stock Level</h2>
+      <p id="stockLevel" class="text-2xl font-bold">0</p>
+    </div>
+
+    <!-- Orders Chart -->
+    <div class="bg-white p-4 rounded-lg shadow col-span-1 md:col-span-2 lg:col-span-3 h-80">
+      <canvas id="ordersChart"></canvas>
+    </div>
+
+    <!-- Detailed Table -->
+    <div class="bg-white p-4 rounded-lg shadow col-span-1 md:col-span-2 lg:col-span-3 overflow-x-auto">
+      <h2 class="text-gray-700 font-bold mb-2">Recent Orders</h2>
+      <table class="min-w-full table-auto">
+        <thead>
+          <tr class="bg-green-200">
+            <th class="px-4 py-2">Order ID</th>
+            <th class="px-4 py-2">Customer</th>
+            <th class="px-4 py-2">Quantity</th>
+            <th class="px-4 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable">
+          <!-- Data populated by JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Placeholder IoT and app data
+    const iotDeviceAPI = "YOUR_IOT_API_LINK"; // Replace with actual API link
+
+    // Sample initial data
+    const ordersData = [
+      {id: 'A101', customer: 'John Doe', quantity: 10, status: 'Delivered'},
+      {id: 'A102', customer: 'Jane Smith', quantity: 5, status: 'Pending'},
+      {id: 'A103', customer: 'Mark Lee', quantity: 8, status: 'In Transit'},
+    ];
+
+    // Populate Table
+    const ordersTable = document.getElementById('ordersTable');
+    ordersData.forEach(order => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="border px-4 py-2">${order.id}</td>
+        <td class="border px-4 py-2">${order.customer}</td>
+        <td class="border px-4 py-2">${order.quantity}</td>
+        <td class="border px-4 py-2">${order.status}</td>
+      `;
+      ordersTable.appendChild(row);
+    });
+
+    // Populate Metrics
+    document.getElementById('totalOrders').innerText = ordersData.length;
+    document.getElementById('stockLevel').innerText = 150; // Sample
+
+    // Orders Chart
+    const ctx = document.getElementById('ordersChart').getContext('2d');
+    const ordersChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+        datasets: [{
+          label: 'Orders',
+          data: [12, 19, 3, 5, 2],
+          backgroundColor: 'rgba(34,197,94,0.2)',
+          borderColor: 'rgba(34,197,94,1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+    // Fetch IoT Device Status
+    fetch(iotDeviceAPI)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('iotStatus').innerText = data.status || 'Online';
+        // Optionally update chart data from IoT
+      })
+      .catch(err => {
+        console.log("Error fetching IoT data:", err);
+        document.getElementById('iotStatus').innerText = 'Offline';
+      });
+  </script>
+
+</body>
+</html>
