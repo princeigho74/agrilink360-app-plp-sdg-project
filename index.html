@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriLink360 — Pan-African Food Distribution</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://checkout.flutterwave.com/v3.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AgriLink360 — Pan-African App Reducing Food Waste & Feeding Communities</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
 </head>
 <body class="bg-gray-50">
 <div id="root"></div>
@@ -17,77 +17,78 @@
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-// ===================== UTILS =====================
+// ===== UTILS =====
 const uid = (prefix='id') => prefix+'_'+Math.random().toString(36).slice(2,9);
+const now = () => new Date().toLocaleString();
 
-// ===================== AFRICAN COUNTRIES =====================
+// ===== AFRICAN COUNTRIES =====
 const AFRICAN_COUNTRIES = [
   "Nigeria","Ghana","Kenya","Uganda","Senegal","Ethiopia","Cameroon",
   "South Africa","Tanzania","Morocco","Algeria","Egypt","Zimbabwe","Namibia",
   "Mali","Ivory Coast","Rwanda","Botswana","Zambia","Sudan","Tunisia","Libya",
   "Mauritius","Mozambique","Burundi","Gabon","Sierra Leone","Lesotho","Benin",
-  "Togo","Sao Tome & Principe","Djibouti","Comoros","Equatorial Guinea","Eswatini",
-  "Lesotho","Guinea","Guinea-Bissau"
+  "Chad","Togo","Gambia","Guinea","Liberia","Niger","Sao Tome & Principe"
 ];
 
-// ===================== PRODUCTS =====================
-let PRODUCTS = [
-  {id:1,title:"Rice",desc:"Long grain rice",qty:"100 bags",price:50,location:"Lagos, Nigeria",sensor:{temp:26,humidity:60},farmerName:"John Doe",farmerEmail:"johndoe@gmail.com"},
-  {id:2,title:"Beans",desc:"Brown beans",qty:"200 bags",price:45,location:"Kano, Nigeria",sensor:{temp:28,humidity:70},farmerName:"Jane Smith",farmerEmail:"janesmith@gmail.com"},
-  {id:3,title:"Cassava",desc:"Fresh cassava tubers",qty:"500kg",price:30,location:"Accra, Ghana",sensor:{temp:29,humidity:85},farmerName:"Kwame Mensah",farmerEmail:"kwame@gmail.com"},
-  {id:4,title:"Onions",desc:"Red onions",qty:"100 bags",price:40,location:"Nairobi, Kenya",sensor:{temp:25,humidity:65},farmerName:"Amina Hassan",farmerEmail:"amina@gmail.com"},
-  {id:5,title:"Tomatoes",desc:"Fresh tomatoes",qty:"200 crates",price:35,location:"Kampala, Uganda",sensor:{temp:31,humidity:88},farmerName:"Peter Okello",farmerEmail:"peterokello@gmail.com"},
-  {id:6,title:"Fish",desc:"Smoked fish",qty:"50 boxes",price:80,location:"Dakar, Senegal",sensor:{temp:27,humidity:55},farmerName:"Cheikh Ndiaye",farmerEmail:"cheikh@gmail.com"},
-  {id:7,title:"Pepper",desc:"Chili pepper",qty:"70 bags",price:20,location:"Addis Ababa, Ethiopia",sensor:{temp:30,humidity:75},farmerName:"Mulugeta Bekele",farmerEmail:"mulugeta@gmail.com"},
-  {id:8,title:"Garri",desc:"Ijebu garri",qty:"300 bags",price:25,location:"Abuja, Nigeria",sensor:{temp:26,humidity:60},farmerName:"Chinedu Eze",farmerEmail:"chinedu@gmail.com"},
-  {id:9,title:"Bush Meat",desc:"Game meat",qty:"20 units",price:150,location:"Yaoundé, Cameroon",sensor:{temp:28,humidity:77},farmerName:"Jean Paul",farmerEmail:"jeanpaul@gmail.com"},
+// ===== PRODUCTS =====
+const PRODUCTS = [
+  {id:1,title:"Rice",desc:"Long grain rice",qty:100,price:50,location:"Lagos, Nigeria",seller:"Farmer A",sensor:{temp:26,humidity:60}},
+  {id:2,title:"Beans",desc:"Brown beans",qty:200,price:45,location:"Kano, Nigeria",seller:"Farmer B",sensor:{temp:28,humidity:70}},
+  {id:3,title:"Cassava",desc:"Fresh cassava tubers",qty:500,price:30,location:"Accra, Ghana",seller:"Farmer C",sensor:{temp:29,humidity:85}},
+  {id:4,title:"Onions",desc:"Red onions",qty:100,price:40,location:"Nairobi, Kenya",seller:"Farmer D",sensor:{temp:25,humidity:65}},
+  {id:5,title:"Tomatoes",desc:"Fresh tomatoes",qty:200,price:35,location:"Kampala, Uganda",seller:"Farmer E",sensor:{temp:31,humidity:88}},
+  {id:6,title:"Fish",desc:"Smoked fish",qty:50,price:80,location:"Dakar, Senegal",seller:"Farmer F",sensor:{temp:27,humidity:55}},
+  {id:7,title:"Pepper",desc:"Chili pepper",qty:70,price:20,location:"Addis Ababa, Ethiopia",seller:"Farmer G",sensor:{temp:30,humidity:75}},
+  {id:8,title:"Garri",desc:"Ijebu garri",qty:300,price:25,location:"Abuja, Nigeria",seller:"Farmer H",sensor:{temp:26,humidity:60}},
+  {id:9,title:"Bush Meat",desc:"Game meat",qty:20,price:150,location:"Yaoundé, Cameroon",seller:"Farmer I",sensor:{temp:28,humidity:77}},
+  {id:10,title:"Maize",desc:"Yellow maize",qty:150,price:40,location:"Dar es Salaam, Tanzania",seller:"Farmer J",sensor:{temp:27,humidity:65}},
+  {id:11,title:"Yam",desc:"Fresh yams",qty:80,price:55,location:"Abidjan, Ivory Coast",seller:"Farmer K",sensor:{temp:28,humidity:70}},
 ];
 
-// ===================== MARKETPLACE =====================
-function Marketplace({onBuy,onView,query,setQuery,user}) {
-  const [countryFilter,setCountryFilter] = useState('');
+// ===== TRANSACTIONS =====
+const initialTransactions = [];
+
+// ===== MARKETPLACE =====
+function Marketplace({user, onBuy, onView}) {
+  const [query, setQuery] = useState('');
+  const [countryFilter, setCountryFilter] = useState('');
 
   const filtered = PRODUCTS.filter(p=>
-    (p.title.toLowerCase().includes(query.toLowerCase()) ||
-    p.location.toLowerCase().includes(query.toLowerCase())) &&
+    (p.title.toLowerCase().includes(query.toLowerCase()) || p.location.toLowerCase().includes(query.toLowerCase())) &&
     (countryFilter ? p.location.includes(countryFilter) : true)
   );
+
+  const handleBuy = (product) => {
+    if(user?.type !== 'buyer') { alert("Only buyers can purchase."); return; }
+    const quantity = prompt(`Enter quantity to buy (available: ${product.qty}):`);
+    const qtyNum = parseInt(quantity);
+    if(!qtyNum || qtyNum > product.qty) { alert("Invalid quantity"); return; }
+    product.qty -= qtyNum;
+    onBuy({...product, boughtQty: qtyNum, date: now()});
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       <h2 className="text-2xl font-bold text-green-700 mb-4">Marketplace</h2>
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search product..." className="border px-3 py-2 rounded flex-1"/>
-        <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border px-3 py-2 rounded">
+        <input className="border px-3 py-2 rounded flex-1" value={query} placeholder="Search product..." onChange={e=>setQuery(e.target.value)} />
+        <select className="border px-3 py-2 rounded" value={countryFilter} onChange={e=>setCountryFilter(e.target.value)}>
           <option value="">All Countries</option>
-          {AFRICAN_COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+          {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filtered.map(p=>(
+        {filtered.map(p => (
           <div key={p.id} className="bg-white rounded shadow p-4">
             <h3 className="text-lg font-semibold">{p.title}</h3>
             <p className="text-sm text-gray-600">{p.desc}</p>
-            <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
+            <p className="text-xs text-gray-500">{p.qty} units • {p.location}</p>
+            <p className="text-sm text-gray-700">Seller: {p.seller}</p>
             <p className="mt-2 font-bold">${p.price}</p>
             <p className="text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
-            <div className="mt-3 flex flex-col sm:flex-row sm:space-x-2 gap-2">
-              <button 
-                onClick={()=>{
-                  if(!user || user.type!=='buyer'){ alert('Login as buyer to purchase'); return; }
-                  onBuy(p);
-                }} 
-                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Buy</button>
-              <button 
-                onClick={()=>onView(p)} 
-                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">View</button>
-              {user?.type==='buyer' && (
-                <button 
-                  onClick={()=>{
-                    alert(`Connected with farmer: ${p.farmerName}\nEmail: ${p.farmerEmail}`);
-                  }} 
-                  className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700">Connect with Farmer</button>
-              )}
+            <div className="mt-3 flex flex-col gap-2">
+              <button onClick={()=>handleBuy(p)} className="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors">Buy</button>
+              <button onClick={()=>onView(p)} className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors">View Details</button>
             </div>
           </div>
         ))}
@@ -96,24 +97,18 @@ function Marketplace({onBuy,onView,query,setQuery,user}) {
   );
 }
 
-// ===================== DASHBOARD =====================
-function Dashboard(){
-  const [orders,setOrders]=useState([
-    {id:'A101',customer:'John Doe',quantity:10,status:'Delivered'},
-    {id:'A102',customer:'Jane Smith',quantity:5,status:'Pending'},
-    {id:'A103',customer:'Mark Lee',quantity:8,status:'In Transit'},
-  ]);
-
-  useEffect(()=>{
-    const ctx=document.getElementById('ordersChart');
+// ===== DASHBOARD =====
+function Dashboard({transactions}) {
+  useEffect(() => {
+    const ctx = document.getElementById('ordersChart');
     if(ctx){
-      new Chart(ctx,{
+      new Chart(ctx, {
         type:'line',
         data:{
-          labels:['Jan','Feb','Mar','Apr','May'],
+          labels:transactions.map(t => t.date),
           datasets:[{
-            label:'Orders',
-            data:[12,19,3,5,2],
+            label:'Sales',
+            data:transactions.map(t => t.boughtQty),
             backgroundColor:'rgba(34,197,94,0.2)',
             borderColor:'rgba(34,197,94,1)',
             borderWidth:2,
@@ -121,82 +116,63 @@ function Dashboard(){
             tension:0.3
           }]
         },
-        options:{responsive:true,maintainAspectRatio:false}
+        options:{responsive:true, maintainAspectRatio:false}
       });
     }
-  },[]);
+  }, [transactions]);
 
   return (
     <div className="p-4 space-y-6">
       <section className="bg-white p-6 rounded-lg shadow text-center">
-        <h2 className="text-2xl font-bold text-green-700 mb-4">🌍 AgriLink360 Dashboard</h2>
+        <h2 className="text-2xl font-bold text-green-700 mb-2">🌍 AgriLink360 Dashboard</h2>
         <p className="text-gray-600">Smart farming insights and order monitoring</p>
       </section>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-gray-700 font-bold">Total Orders</h2>
-          <p className="text-2xl font-bold">{orders.length}</p>
+          <p className="text-2xl font-bold">{transactions.length}</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-gray-700 font-bold">Stock Level</h2>
-          <p className="text-2xl font-bold">{PRODUCTS.length}</p>
+          <h2 className="text-gray-700 font-bold">Total Sales Units</h2>
+          <p className="text-2xl font-bold">{transactions.reduce((a,c)=>a+c.boughtQty,0)}</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-gray-700 font-bold">IoT Devices</h2>
-          <p className="text-sm text-gray-700">Monitoring active devices</p>
+          <h2 className="text-gray-700 font-bold">IoT Spoilage Alerts</h2>
+          <p className="text-sm text-gray-700">Monitor temperature & humidity risks</p>
         </div>
       </div>
-
       <div className="bg-white p-4 rounded shadow h-80">
         <canvas id="ordersChart"></canvas>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-        <img src="https://raw.githubusercontent.com/princeigho74/images/main/419a27c026391cf_file_0000000094086243ab055dcc588f8dff_wm%20(2).png" className="rounded shadow w-full h-40 object-cover" alt="Farm 1"/>
-        <img src="https://raw.githubusercontent.com/princeigho74/images/main/a545f1608f40b66_file_000000008b3061f49ccd7e1ca96868b3_wm%20(1).png" className="rounded shadow w-full h-40 object-cover" alt="Farm 2"/>
-        <img src="https://raw.githubusercontent.com/princeigho74/images/main/cf992f79720b785_file_00000000eb7462438da6dcca8d2146d4_wm.png" className="rounded shadow w-full h-40 object-cover" alt="Farm 3"/>
       </div>
     </div>
   );
 }
 
-// ===================== IoT MONITOR =====================
-function IotMonitor(){
-  const [iotData,setIotData]=useState(PRODUCTS.map(p=>({
-    title:p.title,
-    location:p.location,
-    temp:p.sensor.temp,
-    humidity:p.sensor.humidity
-  })));
-  const [countryFilter,setCountryFilter] = useState('');
-
-  const filteredData = iotData.filter(d=> countryFilter ? d.location.includes(countryFilter) : true);
-
-  // AI-ready: Predict spoilage risk
-  const getSpoilageRisk = (temp,humidity)=>{
-    if(temp>30 && humidity>80) return 'High risk of spoilage';
-    if(temp>30 || humidity>80) return 'Moderate risk';
-    return 'Low risk';
-  };
+// ===== IOT MONITOR =====
+function IotMonitor() {
+  const [countryFilter, setCountryFilter] = useState('');
+  const filteredData = PRODUCTS.filter(p=>countryFilter ? p.location.includes(countryFilter) : true);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       <h2 className="text-2xl font-bold text-green-700 mb-4">IoT Monitor & Spoilage Alert</h2>
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="mb-4">
         <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border px-3 py-2 rounded">
           <option value="">All Countries</option>
-          {AFRICAN_COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+          {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filteredData.map(d=>(
-          <div key={d.title} className={`p-4 rounded shadow ${d.temp>30?'bg-red-200':d.humidity>80?'bg-yellow-200':'bg-green-200'}`}>
-            <h3 className="font-semibold">{d.title}</h3>
-            <p className="text-sm text-gray-700">{d.location}</p>
-            <p>🌡️ Temp: {d.temp}°C</p>
-            <p>💧 Humidity: {d.humidity}%</p>
-            <p className="text-xs mt-1 font-semibold text-red-600">{getSpoilageRisk(d.temp,d.humidity)}</p>
+        {filteredData.map(p=>(
+          <div key={p.id} className={`p-4 rounded shadow ${p.sensor.temp>30?'bg-red-200':p.sensor.humidity>80?'bg-yellow-200':'bg-green-200'}`}>
+            <h3 className="font-semibold">{p.title}</h3>
+            <p className="text-sm text-gray-700">{p.location}</p>
+            <p>🌡️ Temp: {p.sensor.temp}°C</p>
+            <p>💧 Humidity: {p.sensor.humidity}%</p>
+            <p className="text-xs mt-1">
+              {p.sensor.temp>30?'⚠️ High Temperature - Spoilage Risk':''}
+              {p.sensor.humidity>80?' ⚠️ High Humidity':''}
+            </p>
           </div>
         ))}
       </div>
@@ -204,27 +180,24 @@ function IotMonitor(){
   );
 }
 
-// ===================== AUTH =====================
-function Auth({onLogin}){
+// ===== AUTH =====
+function Auth({onLogin}) {
   const [mode,setMode]=useState('login');
-  const [name,setName]=useState('');
-  const [email,setEmail]=useState('');
-  const [pw,setPw]=useState('');
+  const [name,setName]=useState(''); const [email,setEmail]=useState(''); const [pw,setPw]=useState('');
   const [type,setType]=useState('buyer');
 
   const register=e=>{
     e.preventDefault();
     if(!name||!email||!pw){alert('Fill all fields');return;}
+    const users = JSON.parse(localStorage.getItem('users')||'[]');
     const u={id:uid(type),name,email,password:pw,type};
-    const users=JSON.parse(localStorage.getItem('users')||'[]');
-    users.push(u);
-    localStorage.setItem('users',JSON.stringify(users));
+    users.push(u); localStorage.setItem('users',JSON.stringify(users));
     onLogin(u);
   };
 
   const login=e=>{
     e.preventDefault();
-    const users=JSON.parse(localStorage.getItem('users')||'[]');
+    const users = JSON.parse(localStorage.getItem('users')||'[]');
     const u=users.find(x=>x.email===email && x.password===pw);
     if(!u){alert('Invalid credentials');return;}
     onLogin(u);
@@ -234,42 +207,36 @@ function Auth({onLogin}){
     <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-bold mb-4">{mode==='login'?'Login':'Register'}</h2>
       <form onSubmit={mode==='login'?login:register} className="space-y-3">
-        {mode==='register' && (
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Full Name" className="w-full p-2 border rounded"/>
-        )}
-        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="Email" className="w-full p-2 border rounded"/>
-        <input value={pw} onChange={e=>setPw(e.target.value)} type="password" placeholder="Password" className="w-full p-2 border rounded"/>
+        {mode==='register' && <input value={name} onChange={e=>setName(e.target.value)} placeholder="Full Name" className="w-full p-2 border rounded"/>}
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-2 border rounded"/>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Password" className="w-full p-2 border rounded"/>
         {mode==='register' && (
           <select value={type} onChange={e=>setType(e.target.value)} className="w-full p-2 border rounded">
-            <option value="farmer">Farmer</option>
-            <option value="buyer">Buyer</option>
+            <option value="buyer">Buyer</option><option value="farmer">Farmer</option>
           </select>
         )}
         <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">{mode==='login'?'Login':'Register'}</button>
       </form>
       <div className="mt-3 text-sm text-center">
-        {mode==='login'?
-          <span>New user? <button onClick={()=>setMode('register')} className="text-green-600">Register</button></span>:
-          <span>Already registered? <button onClick={()=>setMode('login')} className="text-green-600">Login</button></span>}
+        {mode==='login'?<span>New user? <button onClick={()=>setMode('register')} className="text-green-600">Register</button></span>:<span>Already registered? <button onClick={()=>setMode('login')} className="text-green-600">Login</button></span>}
       </div>
     </div>
   );
 }
 
-// ===================== CONTACT =====================
-function Contact(){
+// ===== CONTACT =====
+function Contact() {
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
       <h2 className="text-2xl font-bold mb-4 text-green-700">Contact Us</h2>
       <p>Email: <a href="mailto:Smartxpress74@gmail.com" className="text-blue-600">Smartxpress74@gmail.com</a></p>
       <p>Phone: <a href="tel:+2348065292102" className="text-blue-600">+2348065292102</a></p>
-      <p className="mt-2">We provide Pan-African food distribution and smart farming solutions.</p>
     </div>
   );
 }
 
-// ===================== HEADER =====================
-function Header({current,setCurrent,user,signout}){
+// ===== HEADER =====
+function Header({current,setCurrent,user,signout}) {
   const [menuOpen,setMenuOpen] = useState(false);
   return (
     <header className="bg-white shadow sticky top-0 z-40">
@@ -278,22 +245,20 @@ function Header({current,setCurrent,user,signout}){
           <div className="w-10 h-10 rounded-md bg-green-600 text-white flex items-center justify-center font-bold">A</div>
           <div>
             <div className="text-lg font-semibold">AgriLink360</div>
-            <div className="text-xs text-gray-500">
-              Reducing Food Waste, Increasing Farm Produces Distribution and Feeding Communities
-            </div>
+            <div className="text-xs text-gray-500">Reducing Food Waste, Increasing Farm Produces Distribution and Feeding Communities</div>
           </div>
         </div>
-        <div className="sm:hidden">
+        <div className="md:hidden">
           <button onClick={()=>setMenuOpen(!menuOpen)} className="px-2 py-1 border rounded">☰</button>
         </div>
-        <nav className={`flex-col sm:flex-row sm:flex items-center gap-2 ${menuOpen?'flex':'hidden'} sm:flex`}>
-          {['market','iot','dashboard','auth','contact'].map(p=>(
+        <nav className={`flex flex-col md:flex-row md:items-center md:space-x-2 ${menuOpen?'block':'hidden'} md:block`}>
+          {['market','iot','dashboard','auth','contact','transactions'].map(p=>(
             <button key={p} className={`px-3 py-2 rounded ${current===p?'bg-green-100':''}`} onClick={()=>setCurrent(p)}>
-              {p==='market'?'Marketplace':p==='iot'?'IoT Monitor':p==='dashboard'?'Dashboard':p==='auth'?'Sign in / Register':'Contact'}
+              {p==='market'?'Marketplace':p==='iot'?'IoT Monitor':p==='dashboard'?'Dashboard':p==='auth'?'Sign in / Register':p==='contact'?'Contact':'Transactions'}
             </button>
           ))}
           {user && (
-            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+            <div className="flex items-center gap-2 mt-2 md:mt-0">
               <span className="text-sm">{user.name}</span>
               <button onClick={signout} className="px-3 py-1 border rounded text-sm">Sign out</button>
             </div>
@@ -304,33 +269,76 @@ function Header({current,setCurrent,user,signout}){
   );
 }
 
-// ===================== APP ROOT =====================
+// ===== APP ROOT =====
 function App(){
   const [current,setCurrent]=useState('market');
   const [user,setUser]=useState(null);
-  const [query,setQuery]=useState('');
   const [selected,setSelected]=useState(null);
+  const [transactions,setTransactions]=useState(initialTransactions);
+
+  const handleBuy = (product) => {
+    setTransactions([...transactions, product]);
+    alert(`Purchase successful: ${product.boughtQty} ${product.title}`);
+  };
 
   return (
     <div>
       <Header current={current} setCurrent={setCurrent} user={user} signout={()=>setUser(null)} />
-
       {current==='auth' && <Auth onLogin={setUser} />}
-      {current==='dashboard' && <Dashboard />}
-      {current==='market' && <Marketplace query={query} setQuery={setQuery} onBuy={(p)=>alert("Bought "+p.title)} onView={setSelected} user={user} />}
+      {current==='dashboard' && <Dashboard transactions={transactions} />}
+      {current==='market' && <Marketplace user={user} onBuy={handleBuy} onView={setSelected} />}
       {current==='iot' && <IotMonitor />}
       {current==='contact' && <Contact />}
+      {current==='transactions' && (
+        <div className="max-w-7xl mx-auto p-6">
+          <h2 className="text-2xl font-bold text-green-700 mb-4">Successful Transactions</h2>
+          {transactions.length === 0 ? (
+            <p className="text-gray-600">No transactions yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded shadow">
+                <thead>
+                  <tr className="bg-green-600 text-white">
+                    <th className="py-2 px-4">Product</th>
+                    <th className="py-2 px-4">Buyer</th>
+                    <th className="py-2 px-4">Quantity</th>
+                    <th className="py-2 px-4">Price</th>
+                    <th className="py-2 px-4">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((t, idx) => (
+                    <tr key={idx} className="text-center border-b">
+                      <td className="py-2 px-4">{t.title}</td>
+                      <td className="py-2 px-4">{user?.name || 'Buyer'}</td>
+                      <td className="py-2 px-4">{t.boughtQty}</td>
+                      <td className="py-2 px-4">${t.price * t.boughtQty}</td>
+                      <td className="py-2 px-4">{t.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
+      {/* Product Details Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow max-w-sm w-full">
             <h2 className="text-lg font-bold mb-2">{selected.title}</h2>
             <p>{selected.desc}</p>
-            <p className="text-sm text-gray-600">{selected.qty} • {selected.location}</p>
-            <p>Farmer: {selected.farmerName}</p>
+            <p className="text-sm text-gray-600">{selected.qty} units • {selected.location}</p>
+            <p className="text-sm text-gray-700">Seller: {selected.seller}</p>
             <p className="mt-2 font-bold">${selected.price}</p>
             <p className="text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
-            <button onClick={()=>setSelected(null)} className="mt-4 w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors">Close</button>
+            <button
+              onClick={() => setSelected(null)}
+              className="mt-4 w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
