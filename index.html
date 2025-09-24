@@ -253,6 +253,8 @@ function Contact(){
 
 // ===================== HEADER =====================
 function Header({current,setCurrent,user,signout}){
+  const [open,setOpen] = useState(false);
+
   return (
     <header className="bg-white shadow sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
@@ -265,14 +267,22 @@ function Header({current,setCurrent,user,signout}){
             </div>
           </div>
         </div>
-        <nav className="flex items-center space-x-2 flex-wrap">
+
+        {/* Hamburger for mobile */}
+        <div className="sm:hidden">
+          <button onClick={()=>setOpen(!open)} className="p-2 border rounded">
+            ☰
+          </button>
+        </div>
+
+        <nav className={`flex-col sm:flex-row sm:flex gap-2 absolute sm:static bg-white sm:bg-transparent w-full sm:w-auto left-0 top-16 sm:top-0 p-4 sm:p-0 shadow sm:shadow-none ${open?'flex':'hidden'} sm:flex`}>
           {['market','iot','dashboard','auth','contact'].map(p=>(
-            <button key={p} className={`px-3 py-2 rounded ${current===p?'bg-green-100':''}`} onClick={()=>setCurrent(p)}>
+            <button key={p} className={`px-3 py-2 rounded ${current===p?'bg-green-100':''}`} onClick={()=>{setCurrent(p); setOpen(false);}}>
               {p==='market'?'Marketplace':p==='iot'?'IoT Monitor':p==='dashboard'?'Dashboard':p==='auth'?'Sign in / Register':'Contact'}
             </button>
           ))}
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2 sm:mt-0">
               <span className="text-sm">{user.name}</span>
               <button onClick={signout} className="px-3 py-1 border rounded text-sm">Sign out</button>
             </div>
