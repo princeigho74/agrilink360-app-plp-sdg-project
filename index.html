@@ -1,268 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriLink360 — Reducing Food Waste, Increasing Farm Produce Distribution, Feeding Communities</title>
+  <title>AgriLink360 — Pan-African Marketplace</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50">
-<div id="root"></div>
+  <div id="root"></div>
 
 <script type="text/babel">
+/**
+ * AgriLink360 - Role-based Buyer/Farmer marketplace with IoT spoilage alerts.
+ * Data uses localStorage for demo but includes clear hooks (TODO) to connect to backend.
+ *
+ * Features:
+ * - Sign up / Sign in (buyer | farmer)
+ * - Buyers can purchase/link with farmers
+ * - Farmers have a dashboard: add/edit products, view linked buyers, IoT alerts
+ * - IoT simulated updates for temps/humidity (farmers' products)
+ * - Fully responsive & mobile-friendly
+ */
+
+/* React imports (available globally) */
 const { useState, useEffect } = React;
 
-// ===================== UTILS =====================
-const uid = (prefix='id') => prefix+'_'+Math.random().toString(36).slice(2,9);
+/* ---------- Utilities ---------- */
+const uid = (prefix='id') => prefix + '_' + Math.random().toString(36).slice(2,9);
 
-// ===================== AFRICAN COUNTRIES =====================
+const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const load = (k, fallback) => {
+  try { return JSON.parse(localStorage.getItem(k)) ?? fallback; }
+  catch(e){ return fallback; }
+};
+
+/* ---------- Countries (expanded list) ---------- */
 const AFRICAN_COUNTRIES = [
-  "Nigeria","Ghana","Kenya","Uganda","Senegal","Ethiopia","Cameroon",
-  "South Africa","Tanzania","Morocco","Algeria","Egypt","Zimbabwe","Namibia",
-  "Mali","Ivory Coast","Rwanda","Botswana","Zambia","Sudan","Tunisia","Libya",
-  "Mauritius","Mozambique","Burundi","Gabon","Sierra Leone","Lesotho","Benin",
-  "Burkina Faso","Djibouti","Equatorial Guinea","Gambia","Guinea","Guinea-Bissau",
-  "Liberia","Malawi","Niger","Sao Tome and Principe","Seychelles","Somalia"
+  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon",
+  "Central African Republic","Chad","Comoros","Congo (Brazzaville)","Congo (Kinshasa)",
+  "Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia",
+  "Ghana","Guinea","Guinea-Bissau","Ivory Coast","Kenya","Lesotho","Liberia","Libya","Madagascar",
+  "Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria",
+  "Rwanda","Sao Tome and Principe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa",
+  "South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
 ];
 
-// ===================== PRODUCTS =====================
-let PRODUCTS = [
-  {id:1,title:"Rice",desc:"Long grain rice",qty:"100 bags",price:50,location:"Lagos, Nigeria",sensor:{temp:26,humidity:60}},
-  {id:2,title:"Beans",desc:"Brown beans",qty:"200 bags",price:45,location:"Kano, Nigeria",sensor:{temp:28,humidity:70}},
-  {id:3,title:"Cassava",desc:"Fresh cassava tubers",qty:"500kg",price:30,location:"Accra, Ghana",sensor:{temp:29,humidity:85}},
-  {id:4,title:"Onions",desc:"Red onions",qty:"100 bags",price:40,location:"Nairobi, Kenya",sensor:{temp:25,humidity:65}},
-  {id:5,title:"Tomatoes",desc:"Fresh tomatoes",qty:"200 crates",price:35,location:"Kampala, Uganda",sensor:{temp:31,humidity:88}},
-  {id:6,title:"Fish",desc:"Smoked fish",qty:"50 boxes",price:80,location:"Dakar, Senegal",sensor:{temp:27,humidity:55}},
-  {id:7,title:"Pepper",desc:"Chili pepper",qty:"70 bags",price:20,location:"Addis Ababa, Ethiopia",sensor:{temp:30,humidity:75}},
-  {id:8,title:"Garri",desc:"Ijebu garri",qty:"300 bags",price:25,location:"Abuja, Nigeria",sensor:{temp:26,humidity:60}},
-  {id:9,title:"Bush Meat",desc:"Game meat",qty:"20 units",price:150,location:"Yaoundé, Cameroon",sensor:{temp:28,humidity:77}},
-  {id:10,title:"Maize",desc:"Yellow maize",qty:"150 bags",price:40,location:"Lusaka, Zambia",sensor:{temp:27,humidity:70}},
-  {id:11,title:"Yam",desc:"Fresh yam tubers",qty:"120 bags",price:55,location:"Abuja, Nigeria",sensor:{temp:26,humidity:65}},
+/* ---------- Initial demo products ---------- */
+const DEMO_PRODUCTS = [
+  { id: 'p_rice', title: 'Rice', desc: 'Long grain rice', qty: '100 bags', price: 50, location: 'Lagos, Nigeria', temp: 26, humidity: 60, farmerId: null },
+  { id: 'p_beans', title: 'Beans', desc: 'Brown beans', qty: '200 bags', price: 45, location: 'Kano, Nigeria', temp: 28, humidity: 70, farmerId: null },
+  { id: 'p_cassava', title: 'Cassava', desc: 'Fresh cassava tubers', qty: '500kg', price: 30, location: 'Accra, Ghana', temp: 29, humidity: 85, farmerId: null },
 ];
 
-// ===================== USERS =====================
-let USERS = []; // will store buyers and farmers
+/* load/save scaffolding */
+if(!localStorage.getItem('ag_products')) save('ag_products', DEMO_PRODUCTS);
+if(!localStorage.getItem('ag_users')) save('ag_users', []); // users: {id,name,email,password,type}
+if(!localStorage.getItem('ag_orders')) save('ag_orders', []); // orders
+if(!localStorage.getItem('ag_links')) save('ag_links', []); // links: {id, buyerId, farmerId}
 
-// ===================== MARKETPLACE =====================
-let trialCount = 0;
-function Marketplace({user, onBuy, onView, query, setQuery, purchaseHistory, setPurchaseHistory}) {
-  const [countryFilter,setCountryFilter] = useState('');
+/* ---------- Header (with mobile hamburger) ---------- */
+function Header({ current, setCurrent, user, onSignout }) {
+  const [open, setOpen] = useState(false);
 
-  const filtered = PRODUCTS.filter(p=>
-    (p.title.toLowerCase().includes(query.toLowerCase()) ||
-     p.location.toLowerCase().includes(query.toLowerCase())) &&
-    (countryFilter ? p.location.includes(countryFilter) : true)
-  );
+  const navButtons = [
+    { key: 'market', label: 'Marketplace' },
+    { key: 'iot', label: 'IoT Monitor' },
+    { key: 'contact', label: 'Contact' }
+  ];
 
-  const handleBuy = (p) => {
-    if(!user || user.type !== 'buyer') { alert("Only buyers can purchase."); return; }
-    trialCount++;
-    if(trialCount > 3){
-      alert("⚠️ Free trial limit reached. Please proceed to payment.");
-      return;
-    }
-    onBuy(p);
-    setPurchaseHistory(prev => [...prev, p]);
-  };
+  // Show Farmer Dashboard for farmers, otherwise marketplace/auth for others
+  if(user?.type === 'farmer') navButtons.splice(1,0,{ key: 'fdashboard', label: 'Farmer Dashboard' });
+
+  // auth button
+  navButtons.push({ key: 'auth', label: user ? 'Account' : 'Sign in / Register' });
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold text-green-700 mb-4">Marketplace</h2>
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search product..." className="border px-3 py-2 rounded flex-1"/>
-        <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border px-3 py-2 rounded">
-          <option value="">All Countries</option>
-          {AFRICAN_COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filtered.map(p=>(
-          <div key={p.id} className="bg-white rounded shadow p-4">
-            <h3 className="text-lg font-semibold">{p.title}</h3>
-            <p className="text-sm text-gray-600">{p.desc}</p>
-            <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
-            <p className="text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
-            <p className="mt-2 font-bold">${p.price}</p>
-            <div className="mt-3 flex flex-col sm:flex-row gap-2">
-              <button onClick={()=>handleBuy(p)} className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 w-full sm:w-auto transition-colors">Buy</button>
-              <button onClick={()=>onView(p)} className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 w-full sm:w-auto transition-colors">View</button>
-            </div>
+    <header className="bg-white shadow sticky top-0 z-40">
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-md bg-green-600 text-white flex items-center justify-center font-bold">A</div>
+          <div>
+            <div className="font-semibold">AgriLink360</div>
+            <div className="text-xs text-gray-500">Reducing Food Waste • Distributing Farm Produce • Feeding Communities</div>
           </div>
-        ))}
-      </div>
-      {user && user.type==='buyer' && <AIRecommendations history={purchaseHistory} />}
-    </div>
-  );
-}
+        </div>
 
-// ===================== AI RECOMMENDATIONS =====================
-function AIRecommendations({history}) {
-  if(history.length===0) return null;
-  const recommended = PRODUCTS.filter(p => !history.some(h => h.id===p.id)).slice(0,3);
-  return (
-    <div className="max-w-7xl mx-auto p-4">
-      <h2 className="text-2xl font-bold text-green-700 mb-4">AI Recommended Products</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {recommended.map(p=>(
-          <div key={p.id} className="bg-white rounded shadow p-4">
-            <h3 className="font-semibold">{p.title}</h3>
-            <p className="text-sm text-gray-600">{p.desc}</p>
-            <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
-            <p className="text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
-            <p className="mt-2 font-bold">${p.price}</p>
+        <div className="sm:hidden">
+          <button aria-label="menu" onClick={()=>setOpen(!open)} className="p-2 border rounded">
+            ☰
+          </button>
+        </div>
+
+        <nav className={`absolute sm:static left-0 top-16 sm:top-0 w-full sm:w-auto bg-white sm:bg-transparent p-4 sm:p-0 shadow sm:shadow-none ${open ? 'block' : 'hidden'} sm:block`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+            {navButtons.map(n => (
+              <button
+                key={n.key}
+                onClick={() => { setCurrent(n.key); setOpen(false); }}
+                className={`px-3 py-2 rounded text-left sm:text-center ${current===n.key ? 'bg-green-100' : ''}`}
+              >
+                {n.label}
+              </button>
+            ))}
+
+            {user && (
+              <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:ml-4">
+                <div className="text-sm">{user.name} <span className="text-xs text-gray-500">({user.type})</span></div>
+                <button onClick={() => { onSignout(); setOpen(false); }} className="px-3 py-1 border rounded text-sm">Sign out</button>
+              </div>
+            )}
           </div>
-        ))}
+        </nav>
       </div>
-    </div>
+    </header>
   );
 }
 
-// ===================== DASHBOARD =====================
-function Dashboard(){
-  const [orders,setOrders]=useState([
-    {id:'A101',customer:'John Doe',quantity:10,status:'Delivered'},
-    {id:'A102',customer:'Jane Smith',quantity:5,status:'Pending'},
-    {id:'A103',customer:'Mark Lee',quantity:8,status:'In Transit'},
-  ]);
+/* ---------- Auth (role-based) ---------- */
+function Auth({ onLogin }) {
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [type, setType] = useState('buyer');
 
-  useEffect(()=>{
-    const ctx=document.getElementById('ordersChart');
-    if(ctx){
-      new Chart(ctx,{
-        type:'line',
-        data:{
-          labels:['Jan','Feb','Mar','Apr','May'],
-          datasets:[{
-            label:'Orders',
-            data:[12,19,3,5,2],
-            backgroundColor:'rgba(34,197,94,0.2)',
-            borderColor:'rgba(34,197,94,1)',
-            borderWidth:2,
-            fill:true,
-            tension:0.3
-          }]
-        },
-        options:{responsive:true,maintainAspectRatio:false}
-      });
-    }
-  },[]);
+  const usersKey = 'ag_users';
 
-  return (
-    <div className="p-4 space-y-6">
-      <section className="bg-white p-6 rounded-lg shadow text-center">
-        <h2 className="text-2xl font-bold text-green-700 mb-2">🌍 AgriLink360 Dashboard</h2>
-        <p className="text-gray-600">Smart farming insights and order monitoring</p>
-        <div className="mt-2 flex justify-center gap-3 flex-wrap">
-          <img src="https://raw.githubusercontent.com/princeigho74/images/main/419a27c026391cf_file_0000000094086243ab055dcc588f8dff_wm%20(2).png" className="h-24 rounded" />
-          <img src="https://raw.githubusercontent.com/princeigho74/images/main/a545f1608f40b66_file_000000008b3061f49ccd7e1ca96868b3_wm%20(1).png" className="h-24 rounded" />
-          <img src="https://raw.githubusercontent.com/princeigho74/images/main/cf992f79720b785_file_00000000eb7462438da6dcca8d2146d4_wm.png" className="h-24 rounded" />
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-gray-700 font-bold">Total Orders</h2>
-          <p className="text-2xl font-bold">{orders.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-gray-700 font-bold">Stock Level</h2>
-          <p className="text-2xl font-bold">{PRODUCTS.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-gray-700 font-bold">IoT Devices</h2>
-          <p className="text-sm text-gray-700">Monitoring active devices</p>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded shadow h-80">
-        <canvas id="ordersChart"></canvas>
-      </div>
-    </div>
-  );
-}
-
-// ===================== IOT MONITOR =====================
-function IotMonitor(){
-  const [iotData,setIotData]=useState(PRODUCTS.map(p=>({
-    title:p.title,
-    location:p.location,
-    temp:p.sensor.temp,
-    humidity:p.sensor.humidity
-  })));
-  const [countryFilter,setCountryFilter] = useState('');
-
-  const filteredData = iotData.filter(d=> countryFilter ? d.location.includes(countryFilter) : true);
-
-  return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold text-green-700 mb-4">IoT Monitor & Spoilage Alert</h2>
-      <div className="flex gap-2 mb-4">
-        <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border px-3 py-2 rounded">
-          <option value="">All Countries</option>
-          {AFRICAN_COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filteredData.map(d=>(
-          <div key={d.title} className={`p-4 rounded shadow ${d.temp>30?'bg-red-200':d.humidity>80?'bg-yellow-200':'bg-green-200'}`}>
-            <h3 className="font-semibold">{d.title}</h3>
-            <p className="text-sm text-gray-700">{d.location}</p>
-            <p>🌡️ Temp: {d.temp}°C</p>
-            <p>💧 Humidity: {d.humidity}%</p>
-            <p className="text-xs mt-1">
-              {d.temp>30?'⚠️ High Temperature - Spoilage Risk':''}
-              {d.humidity>80?' ⚠️ High Humidity':''}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ===================== AUTH =====================
-function Auth({onLogin}){
-  const [mode,setMode]=useState('login');
-  const [name,setName]=useState('');
-  const [email,setEmail]=useState('');
-  const [pw,setPw]=useState('');
-  const [type,setType]=useState('farmer');
-
-  const register=e=>{
+  function register(e) {
     e.preventDefault();
-    if(!name||!email||!pw){alert('Fill all fields');return;}
-    const u={id:uid(type),name,email,password:pw,type};
-    USERS.push(u);
+    if(!name || !email || !pw){ alert('Fill all fields'); return; }
+    const users = load(usersKey, []);
+    if(users.some(u => u.email === email)) { alert('Email already registered'); return; }
+    const u = { id: uid('u'), name, email, password: pw, type };
+    users.push(u);
+    save(usersKey, users);
     onLogin(u);
-  };
+  }
 
-  const login=e=>{
+  function login(e){
     e.preventDefault();
-    const u=USERS.find(x=>x.email===email && x.password===pw);
-    if(!u){alert('Invalid credentials');return;}
+    const users = load(usersKey, []);
+    const u = users.find(x => x.email === email && x.password === pw);
+    if(!u){ alert('Invalid credentials'); return; }
     onLogin(u);
-  };
+  }
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">{mode==='login'?'Login':'Register'}</h2>
-      <form onSubmit={mode==='login'?login:register} className="space-y-3">
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
+      <h2 className="text-xl font-bold mb-4">{mode==='login' ? 'Login' : 'Register'}</h2>
+      <form onSubmit={mode==='login' ? login : register} className="space-y-3">
         {mode==='register' && (
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Full Name" className="w-full p-2 border rounded"/>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Full name" className="w-full p-2 border rounded" />
         )}
-        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="Email" className="w-full p-2 border rounded"/>
-        <input value={pw} onChange={e=>setPw(e.target.value)} type="password" placeholder="Password" className="w-full p-2 border rounded"/>
+        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="Email" className="w-full p-2 border rounded" />
+        <input value={pw} onChange={e=>setPw(e.target.value)} type="password" placeholder="Password" className="w-full p-2 border rounded" />
         {mode==='register' && (
           <select value={type} onChange={e=>setType(e.target.value)} className="w-full p-2 border rounded">
-            <option value="farmer">Farmer</option>
             <option value="buyer">Buyer</option>
+            <option value="farmer">Farmer</option>
           </select>
         )}
-        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">{mode==='login'?'Login':'Register'}</button>
+        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">{mode==='login' ? 'Login' : 'Create Account'}</button>
       </form>
       <div className="mt-3 text-sm text-center">
         {mode==='login' ? (
@@ -275,36 +176,58 @@ function Auth({onLogin}){
   );
 }
 
-// ===================== CONTACT =====================
-function Contact(){
-  return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
-      <h2 className="text-2xl font-bold mb-4 text-green-700">Contact Us</h2>
-      <p>Email: <a href="mailto:Smartxpress74@gmail.com" className="text-blue-600">Smartxpress74@gmail.com</a></p>
-      <p>Phone: <a href="tel:+2348065292102" className="text-blue-600">+2348065292102</a></p>
-      <p className="mt-2">We provide Pan-African food distribution and smart farming solutions.</p>
-    </div>
-  );
-}
+/* ---------- Marketplace (Buyers view) ---------- */
+function Marketplace({ user, onLinkWithFarmer, onBuy, onView }) {
+  const [products, setProducts] = useState(load('ag_products', DEMO_PRODUCTS));
+  const [countryFilter, setCountryFilter] = useState('');
+  const [query, setQuery] = useState('');
 
-// ===================== TRANSACTIONS =====================
-function TransactionsGallery({history}){
-  if(history.length===0) return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow mt-6 text-center">
-      <p className="text-gray-500">No transactions yet.</p>
-    </div>
-  );
+  useEffect(()=> save('ag_products', products), [products]);
+
+  const filtered = products.filter(p => {
+    const passCountry = countryFilter ? p.location.includes(countryFilter) : true;
+    const passQuery = !query || p.title.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
+    return passCountry && passQuery;
+  });
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold text-green-700 mb-4">Transactions Gallery</h2>
+    <div className="max-w-6xl mx-auto p-4">
+      <h2 className="text-2xl font-semibold text-green-700 mb-4">Marketplace</h2>
+
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search product or description..." className="border p-2 rounded flex-1" />
+        <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border p-2 rounded w-full sm:w-auto">
+          <option value="">All Countries</option>
+          {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {history.map((p,idx)=>(
-          <div key={idx} className="bg-white rounded shadow p-4">
-            <h3 className="font-semibold">{p.title}</h3>
-            <p className="text-sm text-gray-600">{p.desc}</p>
-            <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
-            <p className="text-green-600 mt-1 font-semibold">Purchased</p>
+        {filtered.map(p => (
+          <div key={p.id} className="bg-white rounded shadow p-4 flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">{p.title}</h3>
+              <p className="text-sm text-gray-600">{p.desc}</p>
+              <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
+              <p className="mt-2 font-bold">${p.price}</p>
+              <p className="text-sm text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
+
+              {/* IoT short info */}
+              {p.temp !== undefined && (
+                <div className={`inline-block mt-2 px-2 py-1 rounded text-xs ${p.temp>30 ? 'bg-red-200 text-red-800' : p.humidity>80 ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>
+                  🌡 {p.temp}°C • 💧 {p.humidity}%
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 flex flex-col sm:flex-row gap-2">
+              <button onClick={()=>onBuy(p)} className="flex-1 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">Buy</button>
+              <button onClick={()=>onView(p)} className="flex-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700">View</button>
+              {/* Link action only visible to buyers */}
+              {user?.type === 'buyer' && (
+                <button onClick={()=>onLinkWithFarmer(p)} className="flex-1 bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700">Link with Farmer</button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -312,95 +235,272 @@ function TransactionsGallery({history}){
   );
 }
 
-// ===================== HEADER =====================
-  function Header({current,setCurrent,user,signout}){
-  const [menuOpen,setMenuOpen]=useState(false);
+/* ---------- Farmer Dashboard ---------- */
+function FarmerDashboard({ user }) {
+  const [products, setProducts] = useState(load('ag_products', DEMO_PRODUCTS));
+  const [links, setLinks] = useState(load('ag_links', [])); // {id, buyerId, farmerId}
+  const [users, setUsers] = useState(load('ag_users', []));
+  const [form, setForm] = useState({ title:'', desc:'', qty:'', price:'', location:'', temp:25, humidity:60 });
+
+  // Keep products in localStorage
+  useEffect(()=> save('ag_products', products), [products]);
+  useEffect(()=> save('ag_links', links), [links]);
+  useEffect(()=> save('ag_users', users), [users]);
+
+  // IoT simulation: update temps/humidity small random drift for farmer's products every 5s
+  useEffect(()=>{
+    const id = setInterval(()=>{
+      setProducts(prev => prev.map(p => {
+        if(p.farmerId !== user.id) return p;
+        const temp = Math.max(15, Math.min(45, +(p.temp + (Math.random()*4 - 2)).toFixed(1)));
+        const humidity = Math.max(30, Math.min(95, +(p.humidity + (Math.random()*6 - 3)).toFixed(1)));
+        return {...p, temp, humidity};
+      }));
+    }, 5000);
+    return ()=>clearInterval(id);
+  }, [user]);
+
+  const myProducts = products.filter(p => p.farmerId === user.id);
+  const linkedBuyers = links.filter(l => l.farmerId === user.id).map(l => users.find(u => u.id === l.buyerId)).filter(Boolean);
+
+  function addProduct(e){
+    e.preventDefault();
+    const newP = { id: uid('p'), ...form, price: Number(form.price), farmerId: user.id };
+    setProducts(prev => [newP, ...prev]);
+    setForm({ title:'', desc:'', qty:'', price:'', location:'', temp:25, humidity:60 });
+  }
+
+  function removeProduct(id){
+    if(!confirm('Remove product?')) return;
+    setProducts(prev => prev.filter(p => p.id !== id));
+  }
+
   return (
-    <header className="bg-white shadow sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-md bg-green-600 text-white flex items-center justify-center font-bold">A</div>
-          <div className="flex flex-col">
-            <div className="text-lg font-semibold">AgriLink360</div>
-            <div className="text-xs text-gray-500">
-              Reducing Food Waste, Increasing Farm Produce Distribution and Feeding Communities
-            </div>
+    <div className="max-w-6xl mx-auto p-4">
+      <h2 className="text-2xl font-semibold text-green-700 mb-4">Farmer Dashboard</h2>
+
+      <section className="bg-white p-4 rounded shadow mb-6">
+        <h3 className="font-semibold mb-2">Add Product</h3>
+        <form onSubmit={addProduct} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Product title" className="p-2 border rounded" />
+          <input required value={form.qty} onChange={e=>setForm({...form,qty:e.target.value})} placeholder="Quantity (e.g. 100 bags)" className="p-2 border rounded" />
+          <input required value={form.price} onChange={e=>setForm({...form,price:e.target.value})} placeholder="Price" type="number" className="p-2 border rounded" />
+          <select required value={form.location} onChange={e=>setForm({...form,location:e.target.value})} className="p-2 border rounded">
+            <option value="">Choose country / location</option>
+            {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <textarea required value={form.desc} onChange={e=>setForm({...form,desc:e.target.value})} placeholder="Description" className="p-2 border rounded col-span-1 sm:col-span-2" />
+          <div className="flex gap-2">
+            <input value={form.temp} onChange={e=>setForm({...form,temp:Number(e.target.value)})} type="number" step="0.1" placeholder="Temp °C" className="p-2 border rounded w-full" />
+            <input value={form.humidity} onChange={e=>setForm({...form,humidity:Number(e.target.value)})} type="number" step="0.1" placeholder="Humidity %" className="p-2 border rounded w-full" />
           </div>
-        </div>
+          <button type="submit" className="bg-green-600 text-white py-2 px-3 rounded col-span-1 sm:col-span-2">Add Product</button>
+        </form>
+      </section>
 
-        {/* Hamburger Menu */}
-        <div className="sm:hidden">
-          <button onClick={()=>setMenuOpen(!menuOpen)} className="p-2 border rounded">
-            ☰
-          </button>
-        </div>
-
-        <nav className={`flex-col sm:flex-row sm:flex items-center gap-2 ${menuOpen ? "flex" : "hidden"} sm:flex`}>
-          {['auth','dashboard','market','iot','transactions','contact'].map(p=>(
-            <button key={p} className={`px-3 py-2 rounded ${current===p?'bg-green-100':''}`} onClick={()=>{setCurrent(p); setMenuOpen(false);}}>
-              {p==='market'?'Marketplace':
-               p==='iot'?'AI IoT Monitor':
-               p==='dashboard'?'Dashboard':
-               p==='auth'?'Sign in / Register':
-               p==='transactions'?'Transactions':
-               'Contact'}
-            </button>
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">My Products & IoT Status</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {myProducts.length===0 && <div className="text-sm text-gray-600">No products yet. Add above.</div>}
+          {myProducts.map(p => (
+            <div key={p.id} className={`p-4 rounded shadow ${p.temp>30 ? 'bg-red-200' : p.humidity>80 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-semibold">{p.title}</h4>
+                  <p className="text-xs text-gray-700">{p.qty} • {p.location}</p>
+                </div>
+                <button onClick={()=>removeProduct(p.id)} className="text-red-700 text-sm">Remove</button>
+              </div>
+              <p className="mt-2">🌡 {p.temp}°C • 💧 {p.humidity}%</p>
+              <p className="mt-1 text-xs font-semibold">
+                {p.temp>30 ? '⚠️ High Temperature - Spoilage Risk' : p.humidity>80 ? '⚠️ High Humidity - Spoilage Risk' : '✅ Normal'}
+              </p>
+            </div>
           ))}
-          {user && (
-            <div className="flex items-center gap-2 mt-2 sm:mt-0">
-              <span className="text-sm">{user.name}</span>
-              <button onClick={signout} className="px-3 py-1 border rounded text-sm">Sign out</button>
-            </div>
-          )}
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-// ===================== APP ROOT =====================
-function App(){
-  const [current,setCurrent]=useState('auth');
-  const [user,setUser]=useState(null);
-  const [query,setQuery]=useState('');
-  const [selected,setSelected]=useState(null);
-  const [purchaseHistory,setPurchaseHistory]=useState([]);
-
-  return (
-    <div>
-      <Header current={current} setCurrent={setCurrent} user={user} signout={()=>setUser(null)} />
-
-      {current==='auth' && <Auth onLogin={setUser} />}
-      {current==='dashboard' && user && <Dashboard />}
-      {current==='market' && <Marketplace 
-        user={user} 
-        query={query} 
-        setQuery={setQuery} 
-        onBuy={(p)=>alert("Bought "+p.title)} 
-        onView={setSelected} 
-        purchaseHistory={purchaseHistory} 
-        setPurchaseHistory={setPurchaseHistory} />}
-      {current==='iot' && <IotMonitor />}
-      {current==='transactions' && <TransactionsGallery history={purchaseHistory} />}
-      {current==='contact' && <Contact />}
-
-      {selected && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow max-w-sm w-full">
-            <h2 className="text-lg font-bold mb-2">{selected.title}</h2>
-            <p>{selected.desc}</p>
-            <p className="text-sm text-gray-600">{selected.qty} • {selected.location}</p>
-            <p className="text-green-600 mt-1 font-semibold">Fresh & Available for Sale</p>
-            <p className="mt-2 font-bold">${selected.price}</p>
-            <button onClick={()=>setSelected(null)} className="mt-4 w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors">Close</button>
-          </div>
         </div>
-      )}
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Linked Buyers</h3>
+        {linkedBuyers.length === 0 ? (
+          <div className="text-sm text-gray-600">No buyers have linked with you yet. Buyers can click "Link with Farmer" on marketplace items.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {linkedBuyers.map(b => (
+              <div key={b.id} className="p-3 bg-white rounded shadow flex justify-between items-center">
+                <div>
+                  <div className="font-semibold">{b.name}</div>
+                  <div className="text-xs text-gray-500">{b.email}</div>
+                </div>
+                <button className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Message</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="mt-8 text-sm text-gray-500">
+        <strong>Note:</strong> Data is stored locally for demo; replace localStorage hooks with your backend API calls (see TODO comments).
+      </div>
     </div>
   );
 }
 
+/* ---------- IoT Monitor (global) ---------- */
+function IotMonitor() {
+  const [products, setProducts] = useState(load('ag_products', DEMO_PRODUCTS));
+  const [countryFilter, setCountryFilter] = useState('');
+
+  // Simple simulation of device updates across all products
+  useEffect(()=>{
+    const id = setInterval(()=>{
+      setProducts(prev => prev.map(p => {
+        // random drift
+        const temp = +(p.temp + (Math.random()*4 - 2)).toFixed(1);
+        const humidity = +(p.humidity + (Math.random()*6 - 3)).toFixed(1);
+        return { ...p, temp: Math.max(10, Math.min(45, temp)), humidity: Math.max(20, Math.min(95, humidity)) };
+      }));
+    }, 5000);
+    return ()=>clearInterval(id);
+  },[]);
+
+  useEffect(()=> save('ag_products', products), [products]);
+
+  const filtered = products.filter(p => countryFilter ? p.location.includes(countryFilter) : true);
+
+  return (
+    <div className="max-w-6xl mx-auto p-4">
+      <h2 className="text-2xl font-semibold text-green-700 mb-4">IoT Monitor & Spoilage Alerts</h2>
+
+      <div className="flex gap-2 mb-4">
+        <select value={countryFilter} onChange={e=>setCountryFilter(e.target.value)} className="border p-2 rounded">
+          <option value="">All Countries</option>
+          {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {filtered.map(p => (
+          <div key={p.id} className={`p-4 rounded shadow ${p.temp>30 ? 'bg-red-200' : p.humidity>80 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+            <h3 className="font-semibold">{p.title}</h3>
+            <p className="text-sm text-gray-700">{p.location}</p>
+            <p className="mt-1">🌡 {p.temp}°C</p>
+            <p>💧 {p.humidity}%</p>
+            <p className="text-xs mt-1 font-semibold">
+              {p.temp>30 ? '⚠️ High Temperature - Spoilage Risk' : p.humidity>80 ? '⚠️ High Humidity - Spoilage Risk' : '✅ Normal'}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Contact ---------- */
+function Contact() {
+  return (
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow mt-6">
+      <h2 className="text-2xl font-semibold text-green-700 mb-3">Contact</h2>
+      <p>Email: <a className="text-blue-600" href="mailto:Smartxpress74@gmail.com">Smartxpress74@gmail.com</a></p>
+      <p>Phone: <a className="text-blue-600" href="tel:+2348065292102">+2348065292102</a></p>
+    </div>
+  );
+}
+
+/* ---------- App Root (holds user & routing) ---------- */
+function App() {
+  const [current, setCurrent] = useState('market'); // market | iot | auth | contact | fdashboard
+  const [user, setUser] = useState(load('ag_currentUser', null));
+
+  useEffect(()=> {
+    // If user logs in/out in other tab, reflect changes
+    function onStorage() {
+      setUser(load('ag_currentUser', null));
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  },[]);
+
+  function handleLogin(u){
+    setUser(u);
+    save('ag_currentUser', u);
+    // If farmer, send them to farmer dashboard
+    if(u.type === 'farmer') setCurrent('fdashboard');
+    else setCurrent('market');
+  }
+  function handleSignout(){
+    setUser(null);
+    localStorage.removeItem('ag_currentUser');
+    setCurrent('market');
+  }
+
+  /* action handlers for marketplace */
+  function handleBuy(p){
+    if(!user){ alert('Please sign in to buy.'); setCurrent('auth'); return; }
+    if(user.type !== 'buyer'){ alert('Only buyers may purchase.'); return; }
+    const orders = load('ag_orders', []);
+    orders.push({ id: uid('o'), productId: p.id, buyerId: user.id, ts: Date.now() });
+    save('ag_orders', orders);
+    alert('Purchase recorded locally (demo). Implementation should send to backend.');
+    // TODO: call backend createOrder API
+  }
+
+  function handleLinkWithFarmer(p){
+    if(!user){ alert('Please sign in to link with a farmer.'); setCurrent('auth'); return; }
+    if(user.type !== 'buyer'){ alert('Only buyers can link with farmers.'); return; }
+    // If product has farmerId - link to that farmer; otherwise prompt for farmer selection or mark interest
+    let targetFarmerId = p.farmerId;
+    if(!targetFarmerId){
+      // For demo, we assign the buyer's link with a placeholder farmerId 'unassigned' or notify admin
+      if(!confirm('This product has no assigned farmer. Link will be recorded as interest. Continue?')) return;
+      targetFarmerId = 'unassigned';
+    }
+    const links = load('ag_links', []);
+    // prevent duplicates
+    if(links.some(l => l.buyerId === user.id && l.farmerId === targetFarmerId)){
+      alert('Already linked.');
+      return;
+    }
+    links.push({ id: uid('l'), buyerId: user.id, farmerId: targetFarmerId, productId: p.id, ts: Date.now() });
+    save('ag_links', links);
+    alert('Link recorded. Farmers will see this in their dashboard (demo).');
+    // TODO: backend link create
+  }
+
+  /* render area */
+  return (
+    <div>
+      <Header current={current} setCurrent={setCurrent} user={user} onSignout={handleSignout} />
+
+      <main className="pt-4 pb-12">
+        {current === 'market' && <Marketplace user={user} onBuy={handleBuy} onLinkWithFarmer={handleLinkWithFarmer} onView={(p)=>{ /* could open modal */ alert(`${p.title}\n\n${p.desc}\n\nFresh & Available for sale`); }} /> }
+        {current === 'iot' && <IotMonitor />}
+        {current === 'contact' && <Contact />}
+        {current === 'auth' && <Auth onLogin={handleLogin} /> }
+        {current === 'fdashboard' && user?.type === 'farmer' && <FarmerDashboard user={user} /> }
+
+        {/* If farmer logs in but not yet navigated - show quick CTA */}
+        {user?.type === 'farmer' && current !== 'fdashboard' && (
+          <div className="max-w-6xl mx-auto p-4">
+            <div className="bg-white p-4 rounded shadow flex justify-between items-center">
+              <div>
+                <div className="font-semibold">Farmer Quick Actions</div>
+                <div className="text-sm text-gray-600">Manage your produce and track spoilage alerts in the Farmer Dashboard.</div>
+              </div>
+              <div>
+                <button onClick={()=>setCurrent('fdashboard')} className="bg-green-600 text-white px-3 py-2 rounded">Open Farmer Dashboard</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+/* Render */
 ReactDOM.render(<App />, document.getElementById('root'));
+
 </script>
 </body>
 </html>
