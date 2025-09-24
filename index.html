@@ -26,7 +26,7 @@ const AFRICAN_COUNTRIES = [
   "Mali","Ivory Coast","Rwanda","Botswana","Zambia","Sudan","Tunisia","Libya",
   "Mauritius","Mozambique","Burundi","Gabon","Sierra Leone","Lesotho","Benin",
   "Burkina Faso","Djibouti","Equatorial Guinea","Gambia","Guinea","Guinea-Bissau",
-  "Lesotho","Liberia","Malawi","Niger","Sao Tome and Principe","Seychelles","Somalia"
+  "Liberia","Malawi","Niger","Sao Tome and Principe","Seychelles","Somalia"
 ];
 
 // ===================== PRODUCTS =====================
@@ -265,10 +265,11 @@ function Auth({onLogin}){
         <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">{mode==='login'?'Login':'Register'}</button>
       </form>
       <div className="mt-3 text-sm text-center">
-        {mode==='login'?'Login':'Register'}</button>
-
-          <span>New user? <button onClick={()=>setMode('register')} className="text-green-600">Register</button></span>:
-          <span>Already registered? <button onClick={()=>setMode('login')} className="text-green-600">Login</button></span>}
+        {mode==='login' ? (
+          <span>New user? <button onClick={()=>setMode('register')} className="text-green-600">Register</button></span>
+        ) : (
+          <span>Already registered? <button onClick={()=>setMode('login')} className="text-green-600">Login</button></span>
+        )}
       </div>
     </div>
   );
@@ -313,6 +314,7 @@ function TransactionsGallery({history}){
 
 // ===================== HEADER =====================
 function Header({current,setCurrent,user,signout}){
+  const [menuOpen,setMenuOpen]=use function Header({current,setCurrent,user,signout}){
   const [menuOpen,setMenuOpen]=useState(false);
   return (
     <header className="bg-white shadow sticky top-0 z-40">
@@ -370,7 +372,7 @@ function App(){
       <Header current={current} setCurrent={setCurrent} user={user} signout={()=>setUser(null)} />
 
       {current==='auth' && <Auth onLogin={setUser} />}
-      {current==='dashboard' && <Dashboard />}
+      {current==='dashboard' && user && <Dashboard />}
       {current==='market' && <Marketplace 
         user={user} 
         query={query} 
@@ -403,4 +405,3 @@ ReactDOM.render(<App />, document.getElementById('root'));
 </script>
 </body>
 </html>
-          
