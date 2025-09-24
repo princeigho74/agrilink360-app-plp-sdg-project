@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriLink360 — Pan-African Food Distribution</title>
+  <title>AgriLink360 — Pan-African App Reducing Food Waste, Fasting Food Distribution and FeedingCommunities</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
@@ -30,15 +30,15 @@ const AFRICAN_COUNTRIES = [
 
 // ===================== PRODUCTS =====================
 const PRODUCTS = [
-  {id:1,title:"Rice",desc:"Long grain rice",qty:"100 bags",price:50,location:"Lagos, Nigeria",image:"https://i.imgur.com/7bV5VxP.jpg",sensor:{temp:26,humidity:60}},
-  {id:2,title:"Beans",desc:"Brown beans",qty:"200 bags",price:45,location:"Kano, Nigeria",image:"https://i.imgur.com/n1xYjKX.jpg",sensor:{temp:28,humidity:70}},
-  {id:3,title:"Cassava",desc:"Fresh cassava tubers",qty:"500kg",price:30,location:"Accra, Ghana",image:"https://i.imgur.com/PQjQxH7.jpg",sensor:{temp:29,humidity:85}},
-  {id:4,title:"Onions",desc:"Red onions",qty:"100 bags",price:40,location:"Nairobi, Kenya",image:"https://i.imgur.com/VZpODsv.jpg",sensor:{temp:25,humidity:65}},
-  {id:5,title:"Tomatoes",desc:"Fresh tomatoes",qty:"200 crates",price:35,location:"Kampala, Uganda",image:"https://i.imgur.com/4J9lJ3F.jpg",sensor:{temp:31,humidity:88}},
-  {id:6,title:"Fish",desc:"Smoked fish",qty:"50 boxes",price:80,location:"Dakar, Senegal",image:"https://i.imgur.com/WrJX1p7.jpg",sensor:{temp:27,humidity:55}},
-  {id:7,title:"Pepper",desc:"Chili pepper",qty:"70 bags",price:20,location:"Addis Ababa, Ethiopia",image:"https://i.imgur.com/VKtrK6C.jpg",sensor:{temp:30,humidity:75}},
-  {id:8,title:"Garri",desc:"Ijebu garri",qty:"300 bags",price:25,location:"Abuja, Nigeria",image:"https://i.imgur.com/6gT0Y2F.jpg",sensor:{temp:26,humidity:60}},
-  {id:9,title:"Bush Meat",desc:"Game meat",qty:"20 units",price:150,location:"Yaoundé, Cameroon",image:"https://i.imgur.com/XT1iPRg.jpg",sensor:{temp:28,humidity:77}},
+  {id:1,title:"Rice",desc:"Long grain rice",qty:"100 bags",price:50,location:"Lagos, Nigeria",sensor:{temp:26,humidity:60}},
+  {id:2,title:"Beans",desc:"Brown beans",qty:"200 bags",price:45,location:"Kano, Nigeria",sensor:{temp:28,humidity:70}},
+  {id:3,title:"Cassava",desc:"Fresh cassava tubers",qty:"500kg",price:30,location:"Accra, Ghana",sensor:{temp:29,humidity:85}},
+  {id:4,title:"Onions",desc:"Red onions",qty:"100 bags",price:40,location:"Nairobi, Kenya",sensor:{temp:25,humidity:65}},
+  {id:5,title:"Tomatoes",desc:"Fresh tomatoes",qty:"200 crates",price:35,location:"Kampala, Uganda",sensor:{temp:31,humidity:88}},
+  {id:6,title:"Fish",desc:"Smoked fish",qty:"50 boxes",price:80,location:"Dakar, Senegal",sensor:{temp:27,humidity:55}},
+  {id:7,title:"Pepper",desc:"Chili pepper",qty:"70 bags",price:20,location:"Addis Ababa, Ethiopia",sensor:{temp:30,humidity:75}},
+  {id:8,title:"Garri",desc:"Ijebu garri",qty:"300 bags",price:25,location:"Abuja, Nigeria",sensor:{temp:26,humidity:60}},
+  {id:9,title:"Bush Meat",desc:"Game meat",qty:"20 units",price:150,location:"Yaoundé, Cameroon",sensor:{temp:28,humidity:77}},
 ];
 
 // ===================== MARKETPLACE =====================
@@ -74,7 +74,6 @@ function Marketplace({onBuy,onView,query,setQuery}) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {filtered.map(p=>(
           <div key={p.id} className="bg-white rounded shadow p-4">
-            <img src={p.image} className="w-full h-40 object-cover rounded mb-2" />
             <h3 className="text-lg font-semibold">{p.title}</h3>
             <p className="text-sm text-gray-600">{p.desc}</p>
             <p className="text-xs text-gray-500">{p.qty} • {p.location}</p>
@@ -260,22 +259,23 @@ function Header({current,setCurrent,user,signout}){
           <div className="w-10 h-10 rounded-md bg-green-600 text-white flex items-center justify-center font-bold">A</div>
           <div>
             <div className="text-lg font-semibold">AgriLink360</div>
-            <div className="text-xs text-gray-500">Food Distribution Across Africa</div>
+            <div className
+              <div className="text-xs text-gray-500">
+              Reducing Food Waste, Increasing Farm Produces Distribution and Feeding Communities
+            </div>
           </div>
         </div>
         <nav className="flex items-center space-x-2">
-          {['market','iot','dashboard','contact'].map(p=>(
+          {['market','iot','dashboard','auth','contact'].map(p=>(
             <button key={p} className={`px-3 py-2 rounded ${current===p?'bg-green-100':''}`} onClick={()=>setCurrent(p)}>
-              {p==='market'?'Marketplace':p==='iot'?'IoT Monitor':p==='dashboard'?'Dashboard':'Contact'}
+              {p==='market'?'Marketplace':p==='iot'?'IoT Monitor':p==='dashboard'?'Dashboard':p==='auth'?'Sign in / Register':'Contact'}
             </button>
           ))}
-          {user ? (
+          {user && (
             <div className="flex items-center gap-2">
               <span className="text-sm">{user.name}</span>
               <button onClick={signout} className="px-3 py-1 border rounded text-sm">Sign out</button>
             </div>
-          ):(
-            <button onClick={()=>setCurrent('auth')} className="px-3 py-1 border rounded text-sm">Sign in / Register</button>
           )}
         </nav>
       </div>
@@ -293,6 +293,7 @@ function App(){
   return (
     <div>
       <Header current={current} setCurrent={setCurrent} user={user} signout={()=>setUser(null)} />
+      
       {current==='auth' && <Auth onLogin={setUser} />}
       {current==='dashboard' && <Dashboard />}
       {current==='market' && <Marketplace query={query} setQuery={setQuery} onBuy={(p)=>alert("Bought "+p.title)} onView={setSelected} />}
@@ -302,7 +303,6 @@ function App(){
       {selected && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow max-w-sm">
-            <img src={selected.image} className="w-full h-40 object-cover rounded mb-2" />
             <h2 className="text-lg font-bold mb-2">{selected.title}</h2>
             <p>{selected.desc}</p>
             <p className="text-sm text-gray-600">{selected.qty} • {selected.location}</p>
