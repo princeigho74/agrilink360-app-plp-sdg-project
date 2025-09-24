@@ -1,52 +1,80 @@
-const DEFAULT_USERS=[
-  {id:"u1",name:"Farmer Joe",email:"farmer@demo.com",password:"1234",type:"farmer"},
-  {id:"u2",name:"Buyer Jane",email:"buyer@demo.com",password:"1234",type:"buyer"}
-];
-
 function Auth({onLogin}) {
-  const [mode,setMode]=React.useState('signin');
-  const [form,setForm]=React.useState({name:'',email:'',password:'',type:'buyer'});
+  const [mode,setMode]=useState('login');
+  const [name,setName]=useState('');
+  const [email,setEmail]=useState('');
+  const [pw,setPw]=useState('');
+  const [type,setType]=useState('farmer');
 
-  const handleChange=e=>setForm({...form,[e.target.name]:e.target.value});
-  const submit=e=>{
+  const register=e=>{
     e.preventDefault();
-    if(mode==='signin'){
-      const u=DEFAULT_USERS.find(u=>u.email===form.email && u.password===form.password);
-      if(u) onLogin(u);
-      else alert('Invalid credentials');
-    } else {
-      const newUser={...form,id:'u'+Date.now()};
-      DEFAULT_USERS.push(newUser);
-      alert('Account created! You can now sign in.');
-      setMode('signin');
-    }
+    if(!name||!email||!pw){alert('Fill all fields');return;}
+    const u={id:uid(type),name,email,password:pw,type};
+    const users=JSON.parse(localStorage.getItem('users')||'[]');
+    users.push(u);
+    localStorage.setItem('users',JSON.stringify(users));
+    onLogin(u);
+  };
+
+  const login=e=>{
+    e.preventDefault();
+    const users=JSON.parse(localStorage.getItem('users')||'[]');
+    const u=users.find(x=>x.email===email && x.password===pw);
+    if(!u){alert('Invalid credentials');return;}
+    onLogin(u);
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded shadow mt-6">
-      <h2 className="text-2xl font-bold mb-4">{mode==='signin'?'Sign In':'Sign Up'}</h2>
-      <form onSubmit={submit} className="space-y-3">
-        {mode==='signup' && (
-          <>
-            <input type="text" name="name" placeholder="Full Name" value={form.name} onChange={handleChange} className="w-full px-3 py-2 border rounded"/>
-            <select name="type" value={form.type} onChange={handleChange} className="w-full px-3 py-2 border rounded">
-              <option value="buyer">Buyer</option>
+    <div className="flex items-center justify-center min-h-screen px-4 bg-gray-50">
+      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-4 text-center text-green-700">{mode==='login' ? 'Sign In' : 'Sign Up'}</h2>
+        <form onSubmit={mode==='login'?login:register} className="space-y-4">
+          {mode==='register' && (
+            <input
+              value={name}
+              onChange={e=>setName(e.target.value)}
+              placeholder="Full Name"
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+            />
+          )}
+          <input
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+          />
+          <input
+            value={pw}
+            onChange={e=>setPw(e.target.value)}
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+          />
+          {mode==='register' && (
+            <select
+              value={type}
+              onChange={e=>setType(e.target.value)}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
               <option value="farmer">Farmer</option>
+              <option value="buyer">Buyer</option>
             </select>
-          </>
-        )}
-        <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full px-3 py-2 border rounded"/>
-        <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} className="w-full px-3 py-2 border rounded"/>
-        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
-          {mode==='signin'?'Sign In':'Sign Up'}
-        </button>
-      </form>
-      <p className="text-sm text-center mt-4">
-        {mode==='signin'?'Don’t have an account?':'Already have an account?'} 
-        <button onClick={()=>setMode(mode==='signin'?'signup':'signin')} className="text-green-700 font-semibold ml-1">
-          {mode==='signin'?'Sign Up':'Sign In'}
-        </button>
-      </p>
+          )}
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors"
+          >
+            {mode==='login'?'Sign In':'Sign Up'}
+          </button>
+        </form>
+        <div className="mt-4 text-center text-sm">
+          {mode==='login' ? (
+            <span>New user? <button onClick={()=>setMode('register')} className="text-green-600 font-semibold">Sign Up</button></span>
+          ) : (
+            <span>Already registered? <button onClick={()=>setMode('login')} className="text-green-600 font-semibold">Sign In</button></span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
